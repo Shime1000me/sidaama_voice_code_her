@@ -210,7 +210,7 @@
 
     async function getClient() {
       if (!client) {
-        logDebug("Connecting client (waiting for ZeroGPU if asleep)...");
+        logDebug("Connecting client...");
         client = await Client.connect(SPACE);
         logDebug("Client connected successfully.");
       }
@@ -227,16 +227,26 @@
         
         try {
           const c = await getClient();
-          // Gradio 6 requires the exact function name from app.py
           const result = await c.predict('/speak', { text: question });
           
           logDebug(`TTS Data: ${JSON.stringify(result.data)}`);
           
-          let audioPath = result.data[0];
-          if (audioPath && typeof audioPath === 'object') audioPath = audioPath.url;
-          if (!audioPath) throw new Error('No audio URL returned');
+          let audioData = result.data[0];
+          let url = "";
+
+          // Handle the different ways Gradio returns file data
+          if (typeof audioData === 'string') {
+            url = audioData.startsWith('http') ? audioData : `https://${SPACE}/file=${audioData}`;
+          } else if (audioData && typeof audioData === 'object') {
+            if (audioData.url) {
+              url = audioData.url;
+            } else if (audioData.path) {
+              url = `https://${SPACE}/file=${audioData.path}`;
+            }
+          }
           
-          let url = audioPath.startsWith('http') ? audioPath : `https://${SPACE}/file=${audioPath}`;
+          if (!url) throw new Error("Could not parse audio URL");
+          
           logDebug(`Playing audio from: ${url}`);
           
           const audio = new Audio(url);
@@ -276,7 +286,7 @@
             
             const blob = new Blob(activeChunks, { type: 'audio/webm' });
             showStatus('⏳ Transcribing...');
-            logDebug(`Audio recorded. Size: ${blob.size} bytes. Sending to ASR...`);
+            logDebug(`Audio recorded. Sending to ASR...`);
             
             try {
               const file = new File([blob], 'recording.wav', { type: 'audio/webm' });
@@ -303,7 +313,6 @@
           recorder.start();
           btn.classList.add('recording');
           showStatus('🔴 Recording... tap again to stop', 'info');
-          logDebug("Microphone started.");
         } catch (e) {
           logDebug(`Mic Error: ${e.message}`);
           showStatus('❌ Microphone permission denied', 'error');
