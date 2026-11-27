@@ -160,7 +160,6 @@
   <script type="module">
     import { Client } from "https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js";
 
-    // FIXED: Added https:// and correct URL
     const SPACE = "https://hayyoai1000me-sidaama-voice-code-her.hf.space"; 
     
     const statusEl = document.getElementById('status');
@@ -177,10 +176,12 @@
       statusEl.textContent = '';
     }
 
+    // PRE-WAKE THE SPACE: Ping the HF space as soon as page loads
+    fetch(SPACE, { mode: 'no-cors' }).catch(() => {});
+
     async function getClient() {
       if (!client) {
-        // FIXED: Added timeout so it waits for ZeroGPU to wake up
-        client = await Client.connect(SPACE, { hf_token: undefined }); 
+        client = await Client.connect(SPACE); 
       }
       return client;
     }
@@ -190,7 +191,7 @@
         const question = btn.dataset.question;
         if (!question) return;
         btn.disabled = true;
-        showStatus('⏳ Waking up AI and generating voice...');
+        showStatus('⏳ Waking up AI (this may take 15 seconds on first click)...');
         try {
           const c = await getClient();
           const result = await c.predict('/speak', { text: question });
@@ -203,7 +204,7 @@
           hideStatus();
         } catch (e) {
           console.error(e);
-          showStatus('❌ Error connecting to AI. Make sure Space is running.', 'error');
+          showStatus('❌ Connection timed out. Try clicking again.', 'error');
         } finally {
           btn.disabled = false;
         }
@@ -233,23 +234,25 @@
             stream.getTracks().forEach(t => t.stop());
             
             const blob = new Blob(activeChunks, { type: 'audio/webm' });
-            showStatus('⏳ Transcribing...');
+            showStatus('⏳ Transcribing (this may take 15 seconds)...');
             
             try {
-              // FIXED: Using .webm to match the blob type
               const file = new File([blob], 'recording.webm', { type: 'audio/webm' });
               const c = await getClient();
               const result = await c.predict('/transcribe', { audio_path: file });
-              const text = result.data;
+              let text = result.data;
+              
+              // Fix for the brackets issue
+              if (Array.isArray(text)) text = text[0];
               
               if (text) {
-                input.value = typeof text === 'string' ? text : JSON.stringify(text);
+                input.value = text;
                 showStatus('✅ Transcribed', 'success');
                 setTimeout(hideStatus, 1500);
               }
             } catch (e) {
               console.error(e);
-              showStatus('❌ Transcription failed', 'error');
+              showStatus('❌ Transcription failed. Try clicking again.', 'error');
             }
           };
 
