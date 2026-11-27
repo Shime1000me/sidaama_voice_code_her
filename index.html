@@ -165,14 +165,14 @@
   </div>
 
   <script type="module">
-    const SPACE = "https://hayyoai1000me-sidaama-voice-code-her.hf.space";
+    import { Client } from "https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js";
+
+    const SPACE = "hayyoai1000me-sidaama-voice-code-her.hf.space";
     const statusEl = document.getElementById('status');
     const debugLog = document.getElementById('debug-log');
+    let client = null;
     let activeRecorder = null;
     let activeChunks = [];
-    
-    // Generate a session hash for Gradio
-    const sessionHash = Math.random().toString(36).substring(2);
 
     function logDebug(msg) {
       console.log(msg);
@@ -189,8 +189,17 @@
       statusEl.textContent = '';
     }
 
-    logDebug(`Script loaded. Target: ${SPACE}`);
-    fetch(SPACE, { mode: 'no-cors' }).then(() => logDebug("Pre-wake ping sent.")).catch(() => {});
+    logDebug(`Script loaded. Connecting...`);
+    fetch(`https://${SPACE}`, { mode: 'no-cors' }).then(() => logDebug("Pre-wake ping sent.")).catch(() => {});
+
+    async function getClient() {
+      if (!client) {
+        logDebug("Connecting client (waiting for ZeroGPU)...");
+        client = await Client.connect(SPACE);
+        logDebug("Client connected successfully.");
+      }
+      return client;
+    }
 
     // Play Button (TTS)
     document.querySelectorAll('.play-btn').forEach(btn => {
@@ -201,26 +210,18 @@
         logDebug(`Sending TTS: "${question}"`);
         
         try {
-          const response = await fetch(`${SPACE}/api/predict`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              data: [question],
-              fn_index: 1, // Index 1 is the TTS function
-              session_hash: sessionHash
-            })
-          });
+          const c = await getClient();
+          const result = await c.predict('/speak', { text: question });
           
-          logDebug(`Status: ${response.status}`);
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          logDebug(`Data received. Parsing...`);
           
-          const result = await response.json();
-          logDebug(`Raw Data: ${JSON.stringify(result.data)}`);
+          // The Gradio client returns the JSON object directly
+          let parsed = result.data[0];
           
-          let parsed = JSON.parse(result.data[0]);
           if (parsed.error) throw new Error(parsed.error);
           
           let rawBase64 = parsed.audio;
+          
           const byteCharacters = atob(rawBase64);
           const byteNumbers = new Array(byteCharacters.length);
           for (let i = 0; i < byteCharacters.length; i++) {
@@ -271,33 +272,19 @@
             logDebug(`Audio recorded. Sending to ASR...`);
             
             try {
-              const reader = new FileReader();
-              reader.readAsDataURL(blob);
-              reader.onloadend = async () => {
-                const base64data = reader.result;
-                
-                const response = await fetch(`${SPACE}/api/predict`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    data: [base64data],
-                    fn_index: 0, // Index 0 is the ASR function
-                    session_hash: sessionHash
-                  })
-                });
-
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                const result = await response.json();
-                
-                let text = result.data[0];
-                if (Array.isArray(text)) text = text[0];
-                
-                if (text) {
-                  input.value = text;
-                  showStatus('✅ Transcribed', 'success');
-                  setTimeout(hideStatus, 1500);
-                }
-              };
+              const file = new File([blob], 'recording.wav', { type: 'audio/webm' });
+              const c = await getClient();
+              
+              const result = await c.predict('/transcribe', { audio_path: file });
+              
+              let text = result.data;
+              if (Array.isArray(text)) text = text[0];
+              
+              if (text) {
+                input.value = text;
+                showStatus('✅ Transcribed', 'success');
+                setTimeout(hideStatus, 1500);
+              }
             } catch (e) {
               logDebug(`ASR Error: ${e.message}`);
               showStatus('❌ Transcription failed. See debug box.', 'error');
