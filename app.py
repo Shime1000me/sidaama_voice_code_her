@@ -1,95 +1,315 @@
-import gradio as gr
-import torch
-import librosa
-import scipy.io.wavfile
-import os
-import uuid
-import threading
-import requests
-import time
-import subprocess
-import shutil
-import spaces
-import base64
-import json
-from transformers import AutoProcessor, AutoModelForCTC, VitsModel, AutoTokenizer
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hayyo Voice — Loan Application</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+    .container { max-width: 640px; margin: 0 auto; }
+    h1 { text-align: center; margin-bottom: 0.5rem; font-size: 2rem; }
+    .subtitle { text-align: center; color: #94a3b8; margin-bottom: 2rem; }
+    .form-card {
+      background: rgba(30, 41, 59, 0.85);
+      border: 1px solid #334155;
+      border-radius: 16px;
+      padding: 2rem;
+      backdrop-filter: blur(10px);
+    }
+    .field { margin-bottom: 1.5rem; }
+    .field-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+    .btn-group { display: flex; gap: 0.5rem; }
+    .icon-btn {
+      width: 44px;
+      height: 44px;
+      border: 1px solid #475569;
+      background: #1e293b;
+      color: #e2e8f0;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .icon-btn:hover { border-color: #60a5fa; background: #1e3a8a; }
+    .icon-btn:disabled { opacity: 0.5; cursor: wait; }
+    .icon-btn.recording { background: #dc2626; border-color: #dc2626; animation: pulse 1s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+    input[type="text"] {
+      width: 100%;
+      padding: 0.75rem;
+      background: #0f172a;
+      border: 1px solid #475569;
+      border-radius: 8px;
+      color: #e2e8f0;
+      font-size: 1rem;
+      font-family: inherit;
+    }
+    input[type="text"]:focus { outline: none; border-color: #60a5fa; }
+    .status {
+      text-align: center;
+      padding: 0.75rem;
+      margin: 1rem 0;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      display: none;
+    }
+    .status.info { display: block; background: #1e3a8a; color: #93c5fd; }
+    .status.error { display: block; background: #7f1d1d; color: #fecaca; }
+    .status.success { display: block; background: #14532d; color: #86efac; }
+    .submit-btn {
+      width: 100%;
+      padding: 1rem;
+      background: #059669;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 1rem;
+    }
+    .submit-btn:hover { background: #047857; }
+    .footer { text-align: center; margin-top: 2rem; color: #64748b; font-size: 0.85rem; }
+    .debug-box {
+      margin-top: 2rem; background: #000; color: #10b981; padding: 1rem;
+      border-radius: 8px; font-family: monospace; font-size: 0.8rem;
+      max-height: 200px; overflow-y: auto; border: 1px solid #334155;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🇪🇹 Hayyo Voice</h1>
+    <p class="subtitle">Voice Loan Application — Sidaamu Afoo</p>
 
-SPACE_URL = "https://hayyoai1000me-sidaama-voice-code-her.hf.space"
+    <div id="status" class="status"></div>
 
-print("Loading models...")
-device = "cpu"
+    <div class="form-card">
+      <div class="field">
+        <div class="field-label">
+          <span>Su'makki borreessi</span>
+          <div class="btn-group">
+            <button class="icon-btn play-btn" data-question="Su'makki borreessi?">🔊</button>
+            <button class="icon-btn mic-btn" data-target="name">🎤</button>
+          </div>
+        </div>
+        <input type="text" id="name" />
+      </div>
 
-asr_model_name = "badrex/Ethio-ASR-sidaama"
-asr_processor = AutoProcessor.from_pretrained(asr_model_name)
-asr_model = AutoModelForCTC.from_pretrained(asr_model_name).to(device)
+      <div class="field">
+        <div class="field-label">
+          <span>Aganunni mageeshshi eo afidhinanni</span>
+          <div class="btn-group">
+            <button class="icon-btn play-btn" data-question="Aganunni mageeshshi eo afidhinanni?">🔊</button>
+            <button class="icon-btn mic-btn" data-target="amount">🎤</button>
+          </div>
+        </div>
+        <input type="text" id="amount" />
+      </div>
 
-tts_model_name = "facebook/mms-tts-sid"
-tts_model = VitsModel.from_pretrained(tts_model_name).to(device)
-tts_tokenizer = AutoTokenizer.from_pretrained(tts_model_name)
-print("✅ Models loaded successfully!")
+      <div class="field">
+        <div class="field-label">
+          <span>Afidhinoonno eo giddonni mageeshshi womaashsha suuqidhinanni</span>
+          <div class="btn-group">
+            <button class="icon-btn play-btn" data-question="Afidhinoonno eo giddonni mageeshshi womaashsha suuqidhinanni?">🔊</button>
+            <button class="icon-btn mic-btn" data-target="purpose">🎤</button>
+          </div>
+        </div>
+        <input type="text" id="purpose" />
+      </div>
 
-def core_transcribe(audio_path):
-    safe_wav_path = f"/tmp/{uuid.uuid4().hex}.wav"
-    try:
-        subprocess.run(["ffmpeg", "-i", audio_path, "-ar", "16000", "-ac", "1", "-c:a", "pcm_s16le", safe_wav_path, "-y"], check=True, capture_output=True)
-        speech, _ = librosa.load(safe_wav_path, sr=16000)
-        inputs = asr_processor(speech, sampling_rate=16000, return_tensors="pt").to(device)
-        with torch.no_grad(): logits = asr_model(**inputs).logits
-        predicted_ids = torch.argmax(logits, dim=-1)
-        decoded = asr_processor.batch_decode(predicted_ids)[0]
-        if isinstance(decoded, list): decoded = decoded[0]
-        return decoded.strip()
-    finally:
-        if os.path.exists(safe_wav_path): os.remove(safe_wav_path)
+      <div class="field">
+        <div class="field-label">
+          <span>Monthly Income</span>
+          <div class="btn-group">
+            <button class="icon-btn play-btn" data-question="Monthly Income?">🔊</button>
+            <button class="icon-btn mic-btn" data-target="income">🎤</button>
+          </div>
+        </div>
+        <input type="text" id="income" />
+      </div>
 
-@spaces.GPU
-def transcribe(audio_path):
-    if audio_path is None: return "Please record or upload audio."
-    try:
-        text = core_transcribe(audio_path)
-        if os.path.exists(audio_path): os.remove(audio_path)
-        return text
-    except Exception as e: return f"Error: {e}"
+      <div class="field">
+        <div class="field-label">
+          <span>Phone Number</span>
+          <div class="btn-group">
+            <button class="icon-btn play-btn" data-question="Phone Number?">🔊</button>
+            <button class="icon-btn mic-btn" data-target="phone">🎤</button>
+          </div>
+        </div>
+        <input type="text" id="phone" />
+      </div>
 
-@spaces.GPU
-def speak(text):
-    if not text or not text.strip(): return None
-    try:
-        inputs = tts_tokenizer(text, return_tensors="pt").to(device)
-        with torch.no_grad(): output = tts_model(**inputs).waveform
-        filepath = f"/tmp/tts_{uuid.uuid4().hex}.wav"
-        scipy.io.wavfile.write(filepath, rate=tts_model.config.sampling_rate, data=output.cpu().numpy().T)
+      <button class="submit-btn" id="submit-btn">Submit Application</button>
+    </div>
+
+    <p class="footer">Built at AU Hackathon, Hawassa</p>
+    
+    <div class="debug-box" id="debug-log">> Waiting for actions...</div>
+  </div>
+
+  <script type="module">
+    import { Client } from "https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js";
+
+    const SPACE = "hayyoai1000me-sidaama-voice-code-her.hf.space";
+    const statusEl = document.getElementById('status');
+    const debugLog = document.getElementById('debug-log');
+    let client = null;
+    let activeRecorder = null;
+    let activeChunks = [];
+
+    function logDebug(msg) {
+      console.log(msg);
+      debugLog.innerHTML += `<br>> ${msg}`;
+      debugLog.scrollTop = debugLog.scrollHeight;
+    }
+
+    function showStatus(msg, type = 'info') {
+      statusEl.className = 'status ' + type;
+      statusEl.textContent = msg;
+    }
+    function hideStatus() {
+      statusEl.className = 'status';
+      statusEl.textContent = '';
+    }
+
+    logDebug(`Script loaded. Connecting...`);
+
+    fetch(`https://${SPACE}`, { mode: 'no-cors' }).catch(() => {});
+
+    async function getClient() {
+      if (!client) {
+        logDebug("Connecting client (waiting for ZeroGPU)...");
+        client = await Client.connect(SPACE);
+        logDebug("Client connected successfully.");
+      }
+      return client;
+    }
+
+    // Play Button (TTS)
+    document.querySelectorAll('.play-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const question = btn.dataset.question;
+        btn.disabled = true;
+        showStatus('⏳ Waking up AI and generating voice...');
+        logDebug(`Sending TTS: "${question}"`);
         
-        with open(filepath, "rb") as f:
-            audio_bytes = f.read()
-        b64_audio = base64.b64encode(audio_bytes).decode('utf-8')
-        
-        if os.path.exists(filepath): os.remove(filepath)
-        
-        # Wrap in JSON to trick Gradio into treating it as pure text
-        return json.dumps({"audio": b64_audio})
-    except Exception as e: 
-        print(f"TTS Error: {e}")
-        return json.dumps({"error": str(e)})
+        try {
+          const c = await getClient();
+          const result = await c.predict('/speak', { text: question });
+          
+          logDebug(`Response received. Parsing...`);
+          
+          // Parse the JSON string we created in app.py
+          let parsed = JSON.parse(result.data[0]);
+          
+          if (parsed.error) {
+            throw new Error(parsed.error);
+          }
+          
+          let rawBase64 = parsed.audio;
+          
+          // Convert Base64 to Audio Blob
+          const byteCharacters = atob(rawBase64);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+              byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+          const blob = new Blob([byteArray], {type: 'audio/wav'});
+          const url = URL.createObjectURL(blob);
+          
+          logDebug(`Blob created (${blob.size} bytes). Playing...`);
+          
+          const audio = new Audio(url);
+          await audio.play();
+          hideStatus();
+        } catch (e) {
+          logDebug(`TTS Error: ${e.message}`);
+          showStatus('❌ Failed. See debug box.', 'error');
+        } finally {
+          btn.disabled = false;
+        }
+      });
+    });
 
-def keep_alive():
-    while True:
-        time.sleep(600)
-        try: requests.get(SPACE_URL)
-        except: pass
+    // Mic Button (ASR)
+    document.querySelectorAll('.mic-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const targetId = btn.dataset.target;
+        const input = document.getElementById(targetId);
 
-threading.Thread(target=keep_alive, daemon=True).start()
+        if (activeRecorder && activeRecorder.state === 'recording') {
+          activeRecorder.stop();
+          return;
+        }
 
-with gr.Blocks(title="Hayyo Voice") as app:
-    with gr.Tab("🎤"):
-        audio_input = gr.Audio(sources=["microphone", "upload"], type="filepath", show_label=False)
-        asr_button = gr.Button("🎤")
-        text_output = gr.Textbox(show_label=False, lines=3)
-        asr_button.click(fn=transcribe, inputs=audio_input, outputs=text_output)
-    with gr.Tab("🔊"):
-        text_input = gr.Textbox(show_label=False, lines=3)
-        tts_button = gr.Button("🔊")
-        audio_output = gr.Textbox(show_label=False, lines=3) 
-        tts_button.click(fn=speak, inputs=text_input, outputs=audio_output)
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          const recorder = new MediaRecorder(stream);
+          activeRecorder = recorder;
+          activeChunks = [];
 
-app.launch()
+          recorder.ondataavailable = e => activeChunks.push(e.data);
+          
+          recorder.onstop = async () => {
+            btn.classList.remove('recording');
+            stream.getTracks().forEach(t => t.stop());
+            
+            const blob = new Blob(activeChunks, { type: 'audio/webm' });
+            showStatus('⏳ Transcribing...');
+            logDebug(`Audio recorded. Sending to ASR...`);
+            
+            try {
+              const file = new File([blob], 'recording.wav', { type: 'audio/webm' });
+              const c = await getClient();
+              
+              const result = await c.predict('/transcribe', { audio_path: file });
+              
+              let text = result.data;
+              if (Array.isArray(text)) text = text[0];
+              
+              if (text) {
+                input.value = text;
+                showStatus('✅ Transcribed', 'success');
+                setTimeout(hideStatus, 1500);
+              }
+            } catch (e) {
+              logDebug(`ASR Error: ${e.message}`);
+              showStatus('❌ Transcription failed. See debug box.', 'error');
+            }
+          };
+
+          recorder.start();
+          btn.classList.add('recording');
+          showStatus('🔴 Recording... tap again to stop', 'info');
+        } catch (e) {
+          logDebug(`Mic Error: ${e.message}`);
+          showStatus('❌ Microphone permission denied', 'error');
+        }
+      });
+    });
+
+    document.getElementById('submit-btn').addEventListener('click', () => {
+      showStatus('✅ Application submitted!', 'success');
+      logDebug("Submit clicked.");
+    });
+  </script>
+</body>
+</html>
