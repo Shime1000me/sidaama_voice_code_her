@@ -158,13 +158,13 @@
   </div>
 
   <script type="module">
-    import { Client } from "https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js";
-
-    const SPACE = "hayyoai1000me-sidaama-voice-code-her.hf.space";
+    const SPACE = "https://hayyoai1000me-sidaama-voice-code-her.hf.space";
     const statusEl = document.getElementById('status');
-    let client = null;
     let activeRecorder = null;
     let activeChunks = [];
+    
+    // Gradio 6 requires a session hash to process API requests
+    const sessionHash = Math.random().toString(36).substring(2);
 
     function showStatus(msg, type = 'info') {
       statusEl.className = 'status ' + type;
@@ -175,33 +175,38 @@
       statusEl.textContent = '';
     }
 
-    // Pre-wake the ZeroGPU Space as soon as the page loads
-    fetch(`https://${SPACE}`, { mode: 'no-cors' }).catch(() => {});
-
-    async function getClient() {
-      if (!client) {
-        showStatus('⏳ Waking up AI (this takes 15s on first click)...');
-        client = await Client.connect(SPACE);
-      }
-      return client;
-    }
+    // Wake up the Space immediately on page load
+    fetch(`${SPACE}`, { mode: 'no-cors' }).catch(() => {});
 
     // Play Button (TTS)
     document.querySelectorAll('.play-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
         const question = btn.dataset.question;
         if (!question) return;
+        
         btn.disabled = true;
+        showStatus('⏳ Waking up AI (can take 15s on first click)...');
         
         try {
-          const c = await getClient();
-          const result = await c.predict('/speak', { text: question });
+          const response = await fetch(`${SPACE}/api/predict`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              data: [question],
+              fn_index: 1, // Index 1 is the TTS function
+              session_hash: sessionHash
+            })
+          });
+          
+          if (!response.ok) throw new Error('API Error');
+          
+          const result = await response.json();
           let audioPath = result.data[0];
           
           if (audioPath && typeof audioPath === 'object') audioPath = audioPath.url;
-          if (!audioPath) throw new Error('No audio URL returned');
+          if (!audioPath) throw new Error('No audio returned');
 
-          const url = audioPath.startsWith('http') ? audioPath : `https://${SPACE}/file=${audioPath}`;
+          const url = audioPath.startsWith('http') ? audioPath : `${SPACE}/file=${audioPath}`;
           const audio = new Audio(url);
           await audio.play();
           hideStatus();
@@ -241,20 +246,33 @@
             showStatus('⏳ Transcribing...');
             
             try {
-              // Using .webm to match the blob type
-              const file = new File([blob], 'recording.webm', { type: 'audio/webm' });
-              const c = await getClient();
-              
-              const result = await c.predict('/transcribe', { audio_path: file });
-              let text = result.data;
-              
-              if (Array.isArray(text)) text = text[0];
-              
-              if (text) {
-                input.value = text;
-                showStatus('✅ Transcribed', 'success');
-                setTimeout(hideStatus, 1500);
-              }
+              const reader = new FileReader();
+              reader.readAsDataURL(blob);
+              reader.onloadend = async () => {
+                const base64data = reader.result;
+                
+                const response = await fetch(`${SPACE}/api/predict`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    data: [base64data],
+                    fn_index: 0, // Index 0 is the ASR function
+                    session_hash: sessionHash
+                  })
+                });
+
+                if (!response.ok) throw new Error('API Error');
+                const result = await response.json();
+                
+                let text = result.data[0];
+                if (Array.isArray(text)) text = text[0]; // Fix brackets
+                
+                if (text) {
+                  input.value = text;
+                  showStatus('✅ Transcribed', 'success');
+                  setTimeout(hideStatus, 1500);
+                }
+              };
             } catch (e) {
               console.error(e);
               showStatus('❌ Transcription failed. Try again.', 'error');
