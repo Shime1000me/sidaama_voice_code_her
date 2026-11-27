@@ -28,6 +28,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 0.75rem;
       margin-bottom: 0.5rem;
       font-weight: 600;
     }
@@ -72,6 +73,7 @@
     .status.info { display: block; background: #1e3a8a; color: #93c5fd; }
     .status.error { display: block; background: #7f1d1d; color: #fecaca; }
     .status.success { display: block; background: #14532d; color: #86efac; }
+    #player { width: 100%; margin-bottom: 1rem; }
     .submit-btn {
       width: 100%;
       padding: 1rem;
@@ -90,6 +92,7 @@
       margin-top: 2rem; background: #000; color: #10b981; padding: 1rem;
       border-radius: 8px; font-family: monospace; font-size: 0.8rem;
       max-height: 200px; overflow-y: auto; border: 1px solid #334155;
+      white-space: pre-wrap; overflow-wrap: anywhere;
     }
   </style>
 </head>
@@ -99,6 +102,7 @@
     <p class="subtitle">Voice Loan Application — Sidaamu Afoo</p>
 
     <div id="status" class="status"></div>
+    <audio id="player" controls hidden></audio>
 
     <div class="form-card">
       <div class="field">
@@ -160,23 +164,23 @@
     </div>
 
     <p class="footer">Built at AU Hackathon, Hawassa</p>
-    
+
     <div class="debug-box" id="debug-log">> Waiting for actions...</div>
   </div>
 
-  <script type="module">
-    import { Client } from "https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js";
+  <script>
+    const BASE = "https://hayyoai1000me-sidaama-voice-code-her.hf.space";
+    const API = BASE + "/gradio_api";
 
-    const SPACE = "hayyoai1000me-sidaama-voice-code-her.hf.space";
     const statusEl = document.getElementById('status');
     const debugLog = document.getElementById('debug-log');
-    let client = null;
+    const player = document.getElementById('player');
+    const ttsCache = new Map();
     let activeRecorder = null;
-    let activeChunks = [];
 
     function logDebug(msg) {
       console.log(msg);
-      debugLog.innerHTML += `<br>> ${msg}`;
+      debugLog.textContent += `\n> ${msg}`;
       debugLog.scrollTop = debugLog.scrollHeight;
     }
 
@@ -189,19 +193,56 @@
       statusEl.textContent = '';
     }
 
-    logDebug(`Script loaded. Connecting...`);
-    fetch(`https://${SPACE}`, { mode: 'no-cors' }).then(() => logDebug("Pre-wake ping sent.")).catch(() => {});
-
-    async function getClient() {
-      if (!client) {
-        logDebug("Connecting client (waiting for ZeroGPU)...");
-        client = await Client.connect(SPACE);
-        logDebug("Client connected successfully.");
+    async function request(step, url, options = {}) {
+      let res;
+      try {
+        res = await fetch(url, options);
+      } catch (e) {
+        throw new Error(`${step}: cannot reach the Space (${e.message})`);
       }
-      return client;
+      if (!res.ok) {
+        const body = (await res.text()).slice(0, 200);
+        throw new Error(`${step}: HTTP ${res.status} ${body}`);
+      }
+      return res;
     }
 
-    // Helper to convert Hex string back to Audio Blob
+    function parseResult(stream) {
+      let event = '';
+      for (const line of stream.split(/\r?\n/)) {
+        if (line.startsWith('event:')) {
+          event = line.slice(6).trim();
+        } else if (line.startsWith('data:')) {
+          const data = line.slice(5).trim();
+          if (event === 'complete') return JSON.parse(data);
+          if (event === 'error') {
+            throw new Error(`Server error: ${data === 'null' ? 'no details, check the Space logs' : data}`);
+          }
+        }
+      }
+      throw new Error('The connection closed before a result arrived');
+    }
+
+    async function callApi(name, data) {
+      const start = await request(`Start ${name}`, `${API}/call/${name}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data })
+      });
+      const { event_id } = await start.json();
+      logDebug(`Job queued (${name}). Waiting...`);
+      const result = await request(`Result ${name}`, `${API}/call/${name}/${event_id}`);
+      return parseResult(await result.text());
+    }
+
+    async function uploadFile(file) {
+      const form = new FormData();
+      form.append('files', file);
+      const res = await request('Upload', `${API}/upload`, { method: 'POST', body: form });
+      const [path] = await res.json();
+      return { path, orig_name: file.name, meta: { _type: 'gradio.FileData' } };
+    }
+
     function hexToBlob(hex) {
       const bytes = new Uint8Array(hex.length / 2);
       for (let i = 0; i < hex.length; i += 2) {
@@ -210,33 +251,42 @@
       return new Blob([bytes], { type: 'audio/wav' });
     }
 
-    // Play Button (TTS)
+    async function textToSpeech(text) {
+      if (!ttsCache.has(text)) {
+        const [hex] = await callApi('speak', [text]);
+        if (typeof hex !== 'string' || !/^52494646[0-9a-f]+$/i.test(hex)) {
+          throw new Error('No audio returned. Check the Space logs for "TTS Error"');
+        }
+        const blob = hexToBlob(hex);
+        logDebug(`Audio received (${blob.size} bytes).`);
+        ttsCache.set(text, URL.createObjectURL(blob));
+      }
+      return ttsCache.get(text);
+    }
+
+    async function speechToText(file) {
+      const fileData = await uploadFile(file);
+      const [text] = await callApi('transcribe', [fileData]);
+      if (typeof text === 'string' && text.startsWith('Error:')) throw new Error(text);
+      return text;
+    }
+
     document.querySelectorAll('.play-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
         const question = btn.dataset.question;
         btn.disabled = true;
-        showStatus('⏳ Waking up AI and generating voice...');
+        showStatus('⏳ Generating voice...');
         logDebug(`Sending TTS: "${question}"`);
-        
+
         try {
-          const c = await getClient();
-          const result = await c.predict('/speak', { text: question });
-          
-          logDebug(`Data received. Parsing...`);
-          
-          let hexAudio = result.data[0];
-          
-          if (typeof hexAudio !== 'string' || hexAudio.length < 10) {
-            throw new Error("Invalid audio data format returned");
+          player.src = await textToSpeech(question);
+          player.hidden = false;
+          try {
+            await player.play();
+            hideStatus();
+          } catch (e) {
+            showStatus('▶️ Audio is ready. Press play.', 'info');
           }
-          
-          const blob = hexToBlob(hexAudio);
-          const url = URL.createObjectURL(blob);
-          
-          logDebug(`Blob created (${blob.size} bytes). Playing...`);
-          const audio = new Audio(url);
-          await audio.play();
-          hideStatus();
         } catch (e) {
           logDebug(`TTS Error: ${e.message}`);
           showStatus('❌ Failed. See debug box.', 'error');
@@ -246,11 +296,9 @@
       });
     });
 
-    // Mic Button (ASR)
     document.querySelectorAll('.mic-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
-        const targetId = btn.dataset.target;
-        const input = document.getElementById(targetId);
+        const input = document.getElementById(btn.dataset.target);
 
         if (activeRecorder && activeRecorder.state === 'recording') {
           activeRecorder.stop();
@@ -258,38 +306,39 @@
         }
 
         try {
+          player.pause();
           const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
           const recorder = new MediaRecorder(stream);
+          const chunks = [];
           activeRecorder = recorder;
-          activeChunks = [];
 
-          recorder.ondataavailable = e => activeChunks.push(e.data);
-          
+          recorder.ondataavailable = e => chunks.push(e.data);
+
           recorder.onstop = async () => {
             btn.classList.remove('recording');
             stream.getTracks().forEach(t => t.stop());
-            
-            const blob = new Blob(activeChunks, { type: 'audio/webm' });
+            btn.disabled = true;
+
+            const type = recorder.mimeType || 'audio/webm';
+            const ext = type.includes('mp4') ? 'm4a' : type.includes('ogg') ? 'ogg' : 'webm';
+            const file = new File(chunks, `recording.${ext}`, { type });
             showStatus('⏳ Transcribing...');
-            logDebug(`Audio recorded. Sending to ASR...`);
-            
+            logDebug(`Recorded ${file.size} bytes (${ext}). Sending to ASR...`);
+
             try {
-              const file = new File([blob], 'recording.wav', { type: 'audio/webm' });
-              const c = await getClient();
-              
-              const result = await c.predict('/transcribe', { audio_path: file });
-              
-              let text = result.data;
-              if (Array.isArray(text)) text = text[0];
-              
+              const text = await speechToText(file);
               if (text) {
                 input.value = text;
                 showStatus('✅ Transcribed', 'success');
                 setTimeout(hideStatus, 1500);
+              } else {
+                showStatus('No speech detected. Try again.', 'error');
               }
             } catch (e) {
               logDebug(`ASR Error: ${e.message}`);
               showStatus('❌ Transcription failed. See debug box.', 'error');
+            } finally {
+              btn.disabled = false;
             }
           };
 
@@ -297,8 +346,8 @@
           btn.classList.add('recording');
           showStatus('🔴 Recording... tap again to stop', 'info');
         } catch (e) {
-          logDebug(`Mic Error: ${e.message}`);
-          showStatus('❌ Microphone permission denied', 'error');
+          logDebug(`Mic Error: ${e.name}: ${e.message}`);
+          showStatus('❌ Could not start the microphone. See debug box.', 'error');
         }
       });
     });
@@ -307,6 +356,9 @@
       showStatus('✅ Application submitted!', 'success');
       logDebug("Submit clicked.");
     });
+
+    logDebug('Page ready.');
+    fetch(BASE, { mode: 'no-cors' }).then(() => logDebug('Pre-wake ping sent.')).catch(() => {});
   </script>
 </body>
 </html>
