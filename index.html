@@ -234,18 +234,20 @@
           let audioData = result.data[0];
           let url = "";
 
-          // Handle the different ways Gradio returns file data
+          // Robust URL extraction
           if (typeof audioData === 'string') {
             url = audioData.startsWith('http') ? audioData : `https://${SPACE}/file=${audioData}`;
           } else if (audioData && typeof audioData === 'object') {
-            if (audioData.url) {
+            if (audioData.url && audioData.url.startsWith('http')) {
               url = audioData.url;
             } else if (audioData.path) {
-              url = `https://${SPACE}/file=${audioData.path}`;
+              // Extract just the filename from /app/tts_123.wav
+              const filename = audioData.path.split('/').pop();
+              url = `https://${SPACE}/file=${filename}`;
             }
           }
           
-          if (!url) throw new Error("Could not parse audio URL");
+          if (!url) throw new Error("Could not parse audio URL from data");
           
           logDebug(`Playing audio from: ${url}`);
           
