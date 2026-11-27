@@ -190,7 +190,6 @@
     }
 
     logDebug(`Script loaded. Connecting...`);
-
     fetch(`https://${SPACE}`, { mode: 'no-cors' }).catch(() => {});
 
     async function getClient() {
@@ -214,29 +213,23 @@
           const c = await getClient();
           const result = await c.predict('/speak', { text: question });
           
-          logDebug(`Response received. Parsing...`);
+          let audioData = result.data[0];
+          let url = "";
+
+          logDebug(`Data received: ${JSON.stringify(audioData)}`);
           
-          // Parse the JSON string we created in app.py
-          let parsed = JSON.parse(result.data[0]);
-          
-          if (parsed.error) {
-            throw new Error(parsed.error);
+          if (typeof audioData === 'string') {
+            url = audioData;
+          } else if (audioData && audioData.url) {
+            url = audioData.url;
+          } else if (audioData && audioData.path) {
+             const filename = audioData.path.split('/').pop();
+             url = `https://${SPACE}/gradio/${filename}`;
           }
           
-          let rawBase64 = parsed.audio;
+          if (!url) throw new Error("Could not parse audio URL");
           
-          // Convert Base64 to Audio Blob
-          const byteCharacters = atob(rawBase64);
-          const byteNumbers = new Array(byteCharacters.length);
-          for (let i = 0; i < byteCharacters.length; i++) {
-              byteNumbers[i] = byteCharacters.charCodeAt(i);
-          }
-          const byteArray = new Uint8Array(byteNumbers);
-          const blob = new Blob([byteArray], {type: 'audio/wav'});
-          const url = URL.createObjectURL(blob);
-          
-          logDebug(`Blob created (${blob.size} bytes). Playing...`);
-          
+          logDebug(`Playing: ${url}`);
           const audio = new Audio(url);
           await audio.play();
           hideStatus();
@@ -279,7 +272,6 @@
             try {
               const file = new File([blob], 'recording.wav', { type: 'audio/webm' });
               const c = await getClient();
-              
               const result = await c.predict('/transcribe', { audio_path: file });
               
               let text = result.data;
