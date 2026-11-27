@@ -214,12 +214,16 @@
           const c = await getClient();
           const result = await c.predict('/speak', { text: question });
           
-          let rawBase64 = result.data[0];
+          logDebug(`Response received. Parsing...`);
           
-          if (typeof rawBase64 !== 'string' || rawBase64.length < 100) {
-            logDebug(`Unexpected TTS Data: ${JSON.stringify(result.data)}`);
-            throw new Error("Invalid audio data");
+          // Parse the JSON string we created in app.py
+          let parsed = JSON.parse(result.data[0]);
+          
+          if (parsed.error) {
+            throw new Error(parsed.error);
           }
+          
+          let rawBase64 = parsed.audio;
           
           // Convert Base64 to Audio Blob
           const byteCharacters = atob(rawBase64);
