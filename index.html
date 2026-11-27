@@ -86,19 +86,10 @@
     }
     .submit-btn:hover { background: #047857; }
     .footer { text-align: center; margin-top: 2rem; color: #64748b; font-size: 0.85rem; }
-    
-    /* Debug Box */
     .debug-box {
-      margin-top: 2rem;
-      background: #000;
-      color: #10b981;
-      padding: 1rem;
-      border-radius: 8px;
-      font-family: monospace;
-      font-size: 0.8rem;
-      max-height: 200px;
-      overflow-y: auto;
-      border: 1px solid #334155;
+      margin-top: 2rem; background: #000; color: #10b981; padding: 1rem;
+      border-radius: 8px; font-family: monospace; font-size: 0.8rem;
+      max-height: 200px; overflow-y: auto; border: 1px solid #334155;
     }
   </style>
 </head>
@@ -170,10 +161,7 @@
 
     <p class="footer">Built at AU Hackathon, Hawassa</p>
     
-    <!-- THIS IS THE DEBUG BOX -->
-    <div class="debug-box" id="debug-log">
-      > Waiting for actions...
-    </div>
+    <div class="debug-box" id="debug-log">> Waiting for actions...</div>
   </div>
 
   <script type="module">
@@ -203,7 +191,6 @@
 
     logDebug(`Script loaded. Connecting to Gradio 6 Space...`);
 
-    // Pre-wake the Space
     fetch(`https://${SPACE}`, { mode: 'no-cors' })
       .then(() => logDebug("Pre-wake ping sent."))
       .catch((e) => logDebug(`Pre-wake error: ${e.message}`));
@@ -229,29 +216,16 @@
           const c = await getClient();
           const result = await c.predict('/speak', { text: question });
           
-          logDebug(`TTS Data: ${JSON.stringify(result.data)}`);
-          
           let audioData = result.data[0];
-          let url = "";
-
-          // Robust URL extraction
-          if (typeof audioData === 'string') {
-            url = audioData.startsWith('http') ? audioData : `https://${SPACE}/file=${audioData}`;
-          } else if (audioData && typeof audioData === 'object') {
-            if (audioData.url && audioData.url.startsWith('http')) {
-              url = audioData.url;
-            } else if (audioData.path) {
-              // Extract just the filename from /app/tts_123.wav
-              const filename = audioData.path.split('/').pop();
-              url = `https://${SPACE}/file=${filename}`;
-            }
+          
+          if (!audioData || typeof audioData !== 'string' || !audioData.startsWith('data:audio')) {
+            logDebug(`Unexpected TTS Data: ${JSON.stringify(result.data)}`);
+            throw new Error("Invalid audio data format returned");
           }
           
-          if (!url) throw new Error("Could not parse audio URL from data");
+          logDebug(`Received Base64 Audio (length: ${audioData.length})`);
           
-          logDebug(`Playing audio from: ${url}`);
-          
-          const audio = new Audio(url);
+          const audio = new Audio(audioData);
           await audio.play();
           hideStatus();
         } catch (e) {
@@ -295,8 +269,6 @@
               const c = await getClient();
               
               const result = await c.predict('/transcribe', { audio_path: file });
-              
-              logDebug(`ASR Data: ${JSON.stringify(result.data)}`);
               
               let text = result.data;
               if (Array.isArray(text)) text = text[0];
