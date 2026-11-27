@@ -189,15 +189,13 @@
       statusEl.textContent = '';
     }
 
-    logDebug(`Script loaded. Connecting to Gradio 6 Space...`);
+    logDebug(`Script loaded. Connecting...`);
 
-    fetch(`https://${SPACE}`, { mode: 'no-cors' })
-      .then(() => logDebug("Pre-wake ping sent."))
-      .catch((e) => logDebug(`Pre-wake error: ${e.message}`));
+    fetch(`https://${SPACE}`, { mode: 'no-cors' }).catch(() => {});
 
     async function getClient() {
       if (!client) {
-        logDebug("Connecting client...");
+        logDebug("Connecting client (waiting for ZeroGPU)...");
         client = await Client.connect(SPACE);
         logDebug("Client connected successfully.");
       }
@@ -210,23 +208,32 @@
         const question = btn.dataset.question;
         btn.disabled = true;
         showStatus('⏳ Waking up AI and generating voice...');
-        logDebug(`Sending TTS request for: "${question}"`);
+        logDebug(`Sending TTS: "${question}"`);
         
         try {
           const c = await getClient();
           const result = await c.predict('/speak', { text: question });
           
-          logDebug(`TTS Data received.`);
+          let rawBase64 = result.data[0];
           
-          let audioData = result.data[0];
-          
-          // Since app.py now returns a base64 string, it should be a pure string
-          if (typeof audioData !== 'string' || !audioData.startsWith('data:audio')) {
+          if (typeof rawBase64 !== 'string' || rawBase64.length < 100) {
             logDebug(`Unexpected TTS Data: ${JSON.stringify(result.data)}`);
-            throw new Error("Invalid audio data format returned");
+            throw new Error("Invalid audio data");
           }
           
-          const audio = new Audio(audioData);
+          // Convert Base64 to Audio Blob
+          const byteCharacters = atob(rawBase64);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+              byteNumbers[i] = byteCharacters.charCodeAt(i);
+          }
+          const byteArray = new Uint8Array(byteNumbers);
+          const blob = new Blob([byteArray], {type: 'audio/wav'});
+          const url = URL.createObjectURL(blob);
+          
+          logDebug(`Blob created (${blob.size} bytes). Playing...`);
+          
+          const audio = new Audio(url);
           await audio.play();
           hideStatus();
         } catch (e) {
