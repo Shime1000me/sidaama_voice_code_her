@@ -86,6 +86,20 @@
     }
     .submit-btn:hover { background: #047857; }
     .footer { text-align: center; margin-top: 2rem; color: #64748b; font-size: 0.85rem; }
+    
+    /* Debug Box */
+    .debug-box {
+      margin-top: 2rem;
+      background: #000;
+      color: #10b981;
+      padding: 1rem;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 0.8rem;
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #334155;
+    }
   </style>
 </head>
 <body>
@@ -155,16 +169,26 @@
     </div>
 
     <p class="footer">Built at AU Hackathon, Hawassa</p>
+    
+    <!-- THIS IS THE DEBUG BOX -->
+    <div class="debug-box" id="debug-log">
+      > Waiting for actions...
+    </div>
   </div>
 
   <script type="module">
     const SPACE = "https://hayyoai1000me-sidaama-voice-code-her.hf.space";
     const statusEl = document.getElementById('status');
+    const debugLog = document.getElementById('debug-log');
     let activeRecorder = null;
     let activeChunks = [];
-    
-    // Gradio 6 requires a session hash to process API requests
     const sessionHash = Math.random().toString(36).substring(2);
+
+    function logDebug(msg) {
+      console.log(msg);
+      debugLog.innerHTML += `<br>> ${msg}`;
+      debugLog.scrollTop = debugLog.scrollHeight;
+    }
 
     function showStatus(msg, type = 'info') {
       statusEl.className = 'status ' + type;
@@ -175,17 +199,20 @@
       statusEl.textContent = '';
     }
 
-    // Wake up the Space immediately on page load
-    fetch(`${SPACE}`, { mode: 'no-cors' }).catch(() => {});
+    logDebug(`Script loaded. Target: ${SPACE}`);
+    
+    // Pre-wake
+    fetch(`${SPACE}`, { mode: 'no-cors' })
+      .then(() => logDebug("Pre-wake ping sent."))
+      .catch((e) => logDebug(`Pre-wake error: ${e.message}`));
 
     // Play Button (TTS)
     document.querySelectorAll('.play-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
         const question = btn.dataset.question;
-        if (!question) return;
-        
         btn.disabled = true;
-        showStatus('⏳ Waking up AI (can take 15s on first click)...');
+        showStatus('⏳ Generating voice...');
+        logDebug(`Sending TTS request for: "${question}"`);
         
         try {
           const response = await fetch(`${SPACE}/api/predict`, {
@@ -193,26 +220,31 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               data: [question],
-              fn_index: 1, // Index 1 is the TTS function
+              fn_index: 1,
               session_hash: sessionHash
             })
           });
           
-          if (!response.ok) throw new Error('API Error');
+          logDebug(`TTS Response Status: ${response.status}`);
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
           
           const result = await response.json();
-          let audioPath = result.data[0];
+          logDebug(`TTS Data: ${JSON.stringify(result.data)}`);
           
+          let audioPath = result.data[0];
           if (audioPath && typeof audioPath === 'object') audioPath = audioPath.url;
-          if (!audioPath) throw new Error('No audio returned');
-
-          const url = audioPath.startsWith('http') ? audioPath : `${SPACE}/file=${audioPath}`;
+          
+          if (!audioPath) throw new Error('No audio in response');
+          
+          let url = audioPath.startsWith('http') ? audioPath : `${SPACE}/file=${audioPath}`;
+          logDebug(`Playing audio from: ${url}`);
+          
           const audio = new Audio(url);
           await audio.play();
           hideStatus();
         } catch (e) {
-          console.error(e);
-          showStatus('❌ Failed. Click again to retry.', 'error');
+          logDebug(`TTS Error: ${e.message}`);
+          showStatus('❌ Failed. See debug box.', 'error');
         } finally {
           btn.disabled = false;
         }
@@ -244,28 +276,32 @@
             
             const blob = new Blob(activeChunks, { type: 'audio/webm' });
             showStatus('⏳ Transcribing...');
+            logDebug(`Audio recorded. Size: ${blob.size} bytes`);
             
             try {
               const reader = new FileReader();
               reader.readAsDataURL(blob);
               reader.onloadend = async () => {
-                const base64data = reader.result;
+                logDebug(`Sending ASR request...`);
                 
                 const response = await fetch(`${SPACE}/api/predict`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
-                    data: [base64data],
-                    fn_index: 0, // Index 0 is the ASR function
+                    data: [reader.result],
+                    fn_index: 0,
                     session_hash: sessionHash
                   })
                 });
 
-                if (!response.ok) throw new Error('API Error');
+                logDebug(`ASR Response Status: ${response.status}`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
                 const result = await response.json();
+                logDebug(`ASR Data: ${JSON.stringify(result.data)}`);
                 
                 let text = result.data[0];
-                if (Array.isArray(text)) text = text[0]; // Fix brackets
+                if (Array.isArray(text)) text = text[0];
                 
                 if (text) {
                   input.value = text;
@@ -274,16 +310,17 @@
                 }
               };
             } catch (e) {
-              console.error(e);
-              showStatus('❌ Transcription failed. Try again.', 'error');
+              logDebug(`ASR Error: ${e.message}`);
+              showStatus('❌ Transcription failed. See debug box.', 'error');
             }
           };
 
           recorder.start();
           btn.classList.add('recording');
           showStatus('🔴 Recording... tap again to stop', 'info');
+          logDebug("Microphone started.");
         } catch (e) {
-          console.error(e);
+          logDebug(`Mic Error: ${e.message}`);
           showStatus('❌ Microphone permission denied', 'error');
         }
       });
@@ -291,6 +328,7 @@
 
     document.getElementById('submit-btn').addEventListener('click', () => {
       showStatus('✅ Application submitted!', 'success');
+      logDebug("Submit clicked.");
     });
   </script>
 </body>
