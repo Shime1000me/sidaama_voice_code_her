@@ -1,0 +1,11 @@
+.env
+__pycache__/
+*.pyc
+*.wav
+*.mp3
+*.ogg
+*.srt
+*.mp4
+.DS_Store
+.vercel
+node_modules/
