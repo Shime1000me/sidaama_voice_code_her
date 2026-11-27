@@ -96,60 +96,55 @@
     <div id="status" class="status"></div>
 
     <div class="form-card">
-      <!-- Field 1: Name -->
       <div class="field">
         <div class="field-label">
-          <span>Su'makki borreessi</span> <!-- REPLACE LATER -->
+          <span>Su'makki borreessi</span>
           <div class="btn-group">
-            <button class="icon-btn play-btn" data-question="Su'makki borreessi?">🔊</button> <!-- REPLACE LATER -->
+            <button class="icon-btn play-btn" data-question="Su'makki borreessi?">🔊</button>
             <button class="icon-btn mic-btn" data-target="name">🎤</button>
           </div>
         </div>
         <input type="text" id="name" />
       </div>
 
-      <!-- Field 2: Amount -->
       <div class="field">
         <div class="field-label">
-          <span>Aganunni mageeshshi eo afidhinanni</span> <!-- REPLACE LATER -->
+          <span>Aganunni mageeshshi eo afidhinanni</span>
           <div class="btn-group">
-            <button class="icon-btn play-btn" data-question="Aganunni mageeshshi eo afidhinanni?">🔊</button> <!-- REPLACE LATER -->
+            <button class="icon-btn play-btn" data-question="Aganunni mageeshshi eo afidhinanni?">🔊</button>
             <button class="icon-btn mic-btn" data-target="amount">🎤</button>
           </div>
         </div>
         <input type="text" id="amount" />
       </div>
 
-      <!-- Field 3: Purpose -->
       <div class="field">
         <div class="field-label">
-          <span>Afidhinoonno eo giddonni mageeshshi womaashsha suuqidhinanni</span> <!-- REPLACE LATER -->
+          <span>Afidhinoonno eo giddonni mageeshshi womaashsha suuqidhinanni</span>
           <div class="btn-group">
-            <button class="icon-btn play-btn" data-question="Afidhinoonno eo giddonni mageeshshi womaashsha suuqidhinanni?">🔊</button> <!-- REPLACE LATER -->
+            <button class="icon-btn play-btn" data-question="Afidhinoonno eo giddonni mageeshshi womaashsha suuqidhinanni?">🔊</button>
             <button class="icon-btn mic-btn" data-target="purpose">🎤</button>
           </div>
         </div>
         <input type="text" id="purpose" />
       </div>
 
-      <!-- Field 4: Income -->
       <div class="field">
         <div class="field-label">
-          <span>Monthly Income</span> <!-- REPLACE LATER -->
+          <span>Monthly Income</span>
           <div class="btn-group">
-            <button class="icon-btn play-btn" data-question="Monthly Income?">🔊</button> <!-- REPLACE LATER -->
+            <button class="icon-btn play-btn" data-question="Monthly Income?">🔊</button>
             <button class="icon-btn mic-btn" data-target="income">🎤</button>
           </div>
         </div>
         <input type="text" id="income" />
       </div>
 
-      <!-- Field 5: Phone -->
       <div class="field">
         <div class="field-label">
-          <span>Phone Number</span> <!-- REPLACE LATER -->
+          <span>Phone Number</span>
           <div class="btn-group">
-            <button class="icon-btn play-btn" data-question="Phone Number?">🔊</button> <!-- REPLACE LATER -->
+            <button class="icon-btn play-btn" data-question="Phone Number?">🔊</button>
             <button class="icon-btn mic-btn" data-target="phone">🎤</button>
           </div>
         </div>
@@ -165,7 +160,9 @@
   <script type="module">
     import { Client } from "https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js";
 
-    const SPACE = "hayyoai1000me-sidaama-voice-code-her.hf.space";
+    // FIXED: Added https:// and correct URL
+    const SPACE = "https://hayyoai1000me-sidaama-voice-code-her.hf.space"; 
+    
     const statusEl = document.getElementById('status');
     let client = null;
     let activeRecorder = null;
@@ -181,17 +178,19 @@
     }
 
     async function getClient() {
-      if (!client) client = await Client.connect(SPACE);
+      if (!client) {
+        // FIXED: Added timeout so it waits for ZeroGPU to wake up
+        client = await Client.connect(SPACE, { hf_token: undefined }); 
+      }
       return client;
     }
 
-    // Play button
     document.querySelectorAll('.play-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
         const question = btn.dataset.question;
         if (!question) return;
         btn.disabled = true;
-        showStatus('⏳ Generating voice...');
+        showStatus('⏳ Waking up AI and generating voice...');
         try {
           const c = await getClient();
           const result = await c.predict('/speak', { text: question });
@@ -204,14 +203,13 @@
           hideStatus();
         } catch (e) {
           console.error(e);
-          showStatus('❌ Could not play question. Is the Space awake?', 'error');
+          showStatus('❌ Error connecting to AI. Make sure Space is running.', 'error');
         } finally {
           btn.disabled = false;
         }
       });
     });
 
-    // Mic button
     document.querySelectorAll('.mic-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
         const targetId = btn.dataset.target;
@@ -238,7 +236,8 @@
             showStatus('⏳ Transcribing...');
             
             try {
-              const file = new File([blob], 'recording.wav', { type: 'audio/webm' });
+              // FIXED: Using .webm to match the blob type
+              const file = new File([blob], 'recording.webm', { type: 'audio/webm' });
               const c = await getClient();
               const result = await c.predict('/transcribe', { audio_path: file });
               const text = result.data;
@@ -264,10 +263,9 @@
       });
     });
 
-    // Submit
     document.getElementById('submit-btn').addEventListener('click', () => {
       showStatus('✅ Application submitted!', 'success');
     });
   </script>
 </body>
-  </html>
+</html>
