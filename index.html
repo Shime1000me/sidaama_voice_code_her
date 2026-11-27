@@ -216,14 +216,15 @@
           const c = await getClient();
           const result = await c.predict('/speak', { text: question });
           
+          logDebug(`TTS Data received.`);
+          
           let audioData = result.data[0];
           
-          if (!audioData || typeof audioData !== 'string' || !audioData.startsWith('data:audio')) {
+          // Since app.py now returns a base64 string, it should be a pure string
+          if (typeof audioData !== 'string' || !audioData.startsWith('data:audio')) {
             logDebug(`Unexpected TTS Data: ${JSON.stringify(result.data)}`);
             throw new Error("Invalid audio data format returned");
           }
-          
-          logDebug(`Received Base64 Audio (length: ${audioData.length})`);
           
           const audio = new Audio(audioData);
           await audio.play();
