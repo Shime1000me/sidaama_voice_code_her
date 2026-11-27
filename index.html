@@ -201,6 +201,15 @@
       return client;
     }
 
+    // Helper to convert Hex string back to Audio Blob
+    function hexToBlob(hex) {
+      const bytes = new Uint8Array(hex.length / 2);
+      for (let i = 0; i < hex.length; i += 2) {
+        bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16);
+      }
+      return new Blob([bytes], { type: 'audio/wav' });
+    }
+
     // Play Button (TTS)
     document.querySelectorAll('.play-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
@@ -215,20 +224,13 @@
           
           logDebug(`Data received. Parsing...`);
           
-          // The Gradio client returns the JSON object directly
-          let parsed = result.data[0];
+          let hexAudio = result.data[0];
           
-          if (parsed.error) throw new Error(parsed.error);
-          
-          let rawBase64 = parsed.audio;
-          
-          const byteCharacters = atob(rawBase64);
-          const byteNumbers = new Array(byteCharacters.length);
-          for (let i = 0; i < byteCharacters.length; i++) {
-              byteNumbers[i] = byteCharacters.charCodeAt(i);
+          if (typeof hexAudio !== 'string' || hexAudio.length < 10) {
+            throw new Error("Invalid audio data format returned");
           }
-          const byteArray = new Uint8Array(byteNumbers);
-          const blob = new Blob([byteArray], {type: 'audio/wav'});
+          
+          const blob = hexToBlob(hexAudio);
           const url = URL.createObjectURL(blob);
           
           logDebug(`Blob created (${blob.size} bytes). Playing...`);
