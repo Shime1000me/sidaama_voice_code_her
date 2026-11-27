@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hayyo Voice — Loan Application</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+    .container { max-width: 640px; margin: 0 auto; }
+    h1 { text-align: center; margin-bottom: 0.5rem; font-size: 2rem; }
+    .subtitle { text-align: center; color: #94a3b8; margin-bottom: 2rem; }
+    .form-card {
+      background: rgba(30, 41, 59, 0.85);
+      border: 1px solid #334155;
+      border-radius: 16px;
+      padding: 2rem;
+      backdrop-filter: blur(10px);
+    }
+    .field { margin-bottom: 1.5rem; }
+    .field-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+    .btn-group { display: flex; gap: 0.5rem; }
+    .icon-btn {
+      width: 44px;
+      height: 44px;
+      border: 1px solid #475569;
+      background: #1e293b;
+      color: #e2e8f0;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .icon-btn:hover { border-color: #60a5fa; background: #1e3a8a; }
+    .icon-btn:disabled { opacity: 0.5; cursor: wait; }
+    .icon-btn.recording { background: #dc2626; border-color: #dc2626; animation: pulse 1s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+    input[type="text"] {
+      width: 100%;
+      padding: 0.75rem;
+      background: #0f172a;
+      border: 1px solid #475569;
+      border-radius: 8px;
+      color: #e2e8f0;
+      font-size: 1rem;
+      font-family: inherit;
+    }
+    input[type="text"]:focus { outline: none; border-color: #60a5fa; }
+    .status {
+      text-align: center;
+      padding: 0.75rem;
+      margin: 1rem 0;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      display: none;
+    }
+    .status.info { display: block; background: #1e3a8a; color: #93c5fd; }
+    .status.error { display: block; background: #7f1d1d; color: #fecaca; }
+    .status.success { display: block; background: #14532d; color: #86efac; }
+    .submit-btn {
+      width: 100%;
+      padding: 1rem;
+      background: #059669;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 1rem;
+    }
+    .submit-btn:hover { background: #047857; }
+    .footer { text-align: center; margin-top: 2rem; color: #64748b; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🇪🇹 Hayyo Voice</h1>
+    <p class="subtitle">Voice Loan Application — Sidaamu Afoo</p>
+
+    <div id="status" class="status"></div>
+
+    <div class="form-card">
+      <!-- Field 1: Name -->
+      <div class="field">
+        <div class="field-label">
+          <span>Su'makki borreessi</span> <!-- REPLACE LATER -->
+          <div class="btn-group">
+            <button class="icon-btn play-btn" data-question="Su'makki borreessi?">🔊</button> <!-- REPLACE LATER -->
+            <button class="icon-btn mic-btn" data-target="name">🎤</button>
+          </div>
+        </div>
+        <input type="text" id="name" />
+      </div>
+
+      <!-- Field 2: Amount -->
+      <div class="field">
+        <div class="field-label">
+          <span>Aganunni mageeshshi eo afidhinanni</span> <!-- REPLACE LATER -->
+          <div class="btn-group">
+            <button class="icon-btn play-btn" data-question="Aganunni mageeshshi eo afidhinanni?">🔊</button> <!-- REPLACE LATER -->
+            <button class="icon-btn mic-btn" data-target="amount">🎤</button>
+          </div>
+        </div>
+        <input type="text" id="amount" />
+      </div>
+
+      <!-- Field 3: Purpose -->
+      <div class="field">
+        <div class="field-label">
+          <span>Afidhinoonno eo giddonni mageeshshi womaashsha suuqidhinanni</span> <!-- REPLACE LATER -->
+          <div class="btn-group">
+            <button class="icon-btn play-btn" data-question="Afidhinoonno eo giddonni mageeshshi womaashsha suuqidhinanni?">🔊</button> <!-- REPLACE LATER -->
+            <button class="icon-btn mic-btn" data-target="purpose">🎤</button>
+          </div>
+        </div>
+        <input type="text" id="purpose" />
+      </div>
+
+      <!-- Field 4: Income -->
+      <div class="field">
+        <div class="field-label">
+          <span>Monthly Income</span> <!-- REPLACE LATER -->
+          <div class="btn-group">
+            <button class="icon-btn play-btn" data-question="Monthly Income?">🔊</button> <!-- REPLACE LATER -->
+            <button class="icon-btn mic-btn" data-target="income">🎤</button>
+          </div>
+        </div>
+        <input type="text" id="income" />
+      </div>
+
+      <!-- Field 5: Phone -->
+      <div class="field">
+        <div class="field-label">
+          <span>Phone Number</span> <!-- REPLACE LATER -->
+          <div class="btn-group">
+            <button class="icon-btn play-btn" data-question="Phone Number?">🔊</button> <!-- REPLACE LATER -->
+            <button class="icon-btn mic-btn" data-target="phone">🎤</button>
+          </div>
+        </div>
+        <input type="text" id="phone" />
+      </div>
+
+      <button class="submit-btn" id="submit-btn">Submit Application</button>
+    </div>
+
+    <p class="footer">Built at AU Hackathon, Hawassa</p>
+  </div>
+
+  <script type="module">
+    import { Client } from "https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js";
+
+    const SPACE = "hayyoai1000me-sidaama-voice-code-her.hf.space";
+    const statusEl = document.getElementById('status');
+    let client = null;
+    let activeRecorder = null;
+    let activeChunks = [];
+
+    function showStatus(msg, type = 'info') {
+      statusEl.className = 'status ' + type;
+      statusEl.textContent = msg;
+    }
+    function hideStatus() {
+      statusEl.className = 'status';
+      statusEl.textContent = '';
+    }
+
+    async function getClient() {
+      if (!client) client = await Client.connect(SPACE);
+      return client;
+    }
+
+    // Play button
+    document.querySelectorAll('.play-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const question = btn.dataset.question;
+        if (!question) return;
+        btn.disabled = true;
+        showStatus('⏳ Generating voice...');
+        try {
+          const c = await getClient();
+          const result = await c.predict('/speak', { text: question });
+          const data = result.data[0];
+          const url = typeof data === 'string' ? data : (data?.url || data);
+          if (!url) throw new Error('No audio URL returned');
+          
+          const audio = new Audio(url);
+          await audio.play();
+          hideStatus();
+        } catch (e) {
+          console.error(e);
+          showStatus('❌ Could not play question. Is the Space awake?', 'error');
+        } finally {
+          btn.disabled = false;
+        }
+      });
+    });
+
+    // Mic button
+    document.querySelectorAll('.mic-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const targetId = btn.dataset.target;
+        const input = document.getElementById(targetId);
+
+        if (activeRecorder && activeRecorder.state === 'recording') {
+          activeRecorder.stop();
+          return;
+        }
+
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          const recorder = new MediaRecorder(stream);
+          activeRecorder = recorder;
+          activeChunks = [];
+
+          recorder.ondataavailable = e => activeChunks.push(e.data);
+          
+          recorder.onstop = async () => {
+            btn.classList.remove('recording');
+            stream.getTracks().forEach(t => t.stop());
+            
+            const blob = new Blob(activeChunks, { type: 'audio/webm' });
+            showStatus('⏳ Transcribing...');
+            
+            try {
+              const file = new File([blob], 'recording.wav', { type: 'audio/webm' });
+              const c = await getClient();
+              const result = await c.predict('/transcribe', { audio_path: file });
+              const text = result.data;
+              
+              if (text) {
+                input.value = typeof text === 'string' ? text : JSON.stringify(text);
+                showStatus('✅ Transcribed', 'success');
+                setTimeout(hideStatus, 1500);
+              }
+            } catch (e) {
+              console.error(e);
+              showStatus('❌ Transcription failed', 'error');
+            }
+          };
+
+          recorder.start();
+          btn.classList.add('recording');
+          showStatus('🔴 Recording... tap again to stop', 'info');
+        } catch (e) {
+          console.error(e);
+          showStatus('❌ Microphone permission denied', 'error');
+        }
+      });
+    });
+
+    // Submit
+    document.getElementById('submit-btn').addEventListener('click', () => {
+      showStatus('✅ Application submitted!', 'success');
+    });
+  </script>
+</body>
+  </html>
