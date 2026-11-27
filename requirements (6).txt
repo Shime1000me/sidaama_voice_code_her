@@ -1,0 +1,11 @@
+transformers
+torch
+torchaudio
+librosa
+scipy
+gradio
+spaces
+requests
+pydub
+ffmpeg-python
+huggingface_hub
