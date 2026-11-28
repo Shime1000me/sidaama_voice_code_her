@@ -3,114 +3,268 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Transcrib.her — Voice Infrastructure for Africa</title>
+  <title>Transcribe'Her — Voice Infrastructure for Africa</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --yellow: #FACC15;
+      --yellow-dark: #EAB308;
+      --black: #0A0A0A;
+      --gray-900: #111827;
+      --gray-800: #1F2937;
+      --gray-700: #374151;
+      --gray-500: #6B7280;
+      --gray-100: #F3F4F6;
+      --white: #FFFFFF;
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: white; line-height: 1.6; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--white); color: var(--black); line-height: 1.5; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
     
-    /* Navigation */
-    .nav { padding: 1.5rem 2rem; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; }
-    .logo { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; }
-    .logo span { color: #60a5fa; }
-
-    /* Hero Section */
-    .hero { text-align: center; padding: 5rem 2rem 3rem; max-width: 800px; margin: 0 auto; }
-    .badge { background: rgba(96, 165, 250, 0.1); color: #60a5fa; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600; margin-bottom: 1.5rem; display: inline-block; }
-    .hero h1 { font-size: 3.5rem; line-height: 1.1; margin-bottom: 1.5rem; letter-spacing: -1px; }
-    .hero p { font-size: 1.2rem; color: #94a3b8; max-width: 600px; margin: 0 auto; }
-
-    /* Problem/Solution Section */
-    .pitch-section { background: #1e293b; padding: 4rem 2rem; border-top: 1px solid #334155; border-bottom: 1px solid #334155; }
-    .pitch-grid { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; }
-    .pitch-box h3 { font-size: 1.5rem; color: #60a5fa; margin-bottom: 1rem; }
-    .pitch-box p { color: #cbd5e1; }
-
-    /* Architecture / Demo Section */
-    .demo-section { padding: 5rem 2rem; text-align: center; max-width: 1000px; margin: 0 auto; }
-    .demo-section h2 { font-size: 2rem; margin-bottom: 1rem; }
-    .demo-section > p { color: #94a3b8; margin-bottom: 3rem; }
+    /* Top Nav */
+    .navbar { border-bottom: 1px solid #E5E7EB; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: white; z-index: 50; }
+    .logo { font-size: 1.5rem; font-weight: 800; display: flex; align-items: center; gap: 0.5rem; }
+    .logo span { color: var(--yellow-dark); }
+    .badge { background: var(--gray-100); border: 1px solid #E5E7EB; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--gray-500); }
     
-    .options { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; text-align: left; }
-    .option-card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 2rem; text-decoration: none; color: inherit; transition: 0.2s; display: flex; flex-direction: column; }
-    .option-card:hover { transform: translateY(-3px); border-color: #60a5fa; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3); }
-    .option-card h3 { font-size: 1.2rem; margin-bottom: 0.5rem; color: white; display: flex; align-items: center; gap: 0.5rem; }
-    .option-card p { color: #94a3b8; font-size: 0.9rem; }
-    .icon { font-size: 1.5rem; }
+    /* Hero Layout */
+    .hero-container { max-width: 1200px; margin: 0 auto; padding: 4rem 2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
+    .hero-text h1 { font-size: 3.5rem; font-weight: 800; line-height: 1.1; margin-bottom: 1.5rem; }
+    .highlight { position: relative; display: inline-block; z-index: 1; }
+    .highlight::after { content: ''; position: absolute; bottom: 4px; left: 0; width: 100%; height: 12px; background: var(--yellow); z-index: -1; }
+    .hero-text p { font-size: 1.1rem; color: var(--gray-500); margin-bottom: 2rem; max-width: 90%; }
+    
+    /* Buttons */
+    .btn-group { display: flex; gap: 1rem; margin-bottom: 3rem; flex-wrap: wrap; }
+    .btn-primary { background: var(--yellow); color: var(--black); border: 2px solid var(--black); padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 800; font-size: 1rem; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; box-shadow: 4px 4px 0px 0px var(--black); transition: all 0.2s; }
+    .btn-primary:hover { transform: translate(1px, 1px); box-shadow: 3px 3px 0px 0px var(--black); }
+    .btn-secondary { background: white; color: var(--black); border: 2px solid var(--black); padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 700; font-size: 1rem; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: background 0.2s; }
+    .btn-secondary:hover { background: var(--gray-100); }
 
-    /* Footer */
-    .footer { text-align: center; padding: 3rem; color: #64748b; font-size: 0.9rem; border-top: 1px solid #334155; }
+    /* Feature Strip */
+    .feature-strip { border-top: 1px solid #E5E7EB; padding-top: 2rem; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; }
+    .feature { display: flex; gap: 1rem; align-items: flex-start; }
+    .feature-icon { width: 32px; height: 32px; border-radius: 6px; background: var(--gray-100); border: 1px solid #E5E7EB; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+    .feature-text h4 { font-size: 0.9rem; font-weight: 800; }
+    .feature-text p { font-size: 0.75rem; color: var(--gray-500); }
 
-    @media (max-width: 768px) {
-      .hero h1 { font-size: 2.5rem; }
-      .pitch-grid, .options { grid-template-columns: 1fr; gap: 1.5rem; }
+    /* Right Side: Interactive Console */
+    .console-box { background: var(--gray-900); border-radius: 16px; border: 2px solid var(--black); box-shadow: 6px 6px 0px 0px var(--black); overflow: hidden; }
+    .console-top { background: var(--black); padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--gray-800); }
+    .console-tabs { display: flex; background: var(--gray-800); border-radius: 6px; padding: 0.25rem; }
+    .console-tab { padding: 0.25rem 0.75rem; font-size: 0.75rem; font-weight: 700; color: var(--gray-500); border: none; background: none; border-radius: 4px; cursor: pointer; }
+    .console-tab.active { background: var(--yellow); color: var(--black); }
+    .console-status { color: var(--gray-500); font-size: 0.7rem; font-family: 'JetBrains Mono', monospace; }
+    
+    .console-content { padding: 1.5rem; }
+    .endpoint-box { background: var(--black); border: 1px solid var(--gray-800); border-radius: 8px; padding: 0.75rem; display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+    .method-badge { background: var(--yellow); color: var(--black); font-size: 0.7rem; font-weight: 800; padding: 0.2rem 0.4rem; border-radius: 4px; margin-right: 0.5rem; }
+    .endpoint-url { color: white; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; }
+    
+    .json-box { background: var(--black); border: 1px solid var(--gray-800); border-radius: 8px; overflow: hidden; margin-bottom: 1rem; }
+    .json-header { padding: 0.5rem 1rem; background: var(--gray-900); border-bottom: 1px solid var(--gray-800); font-size: 0.7rem; color: var(--gray-500); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; display: flex; justify-content: space-between; }
+    .json-body { padding: 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #A7F3D0; overflow-x: auto; }
+    
+    .console-footer { background: var(--black); padding: 0.75rem 1rem; border-top: 1px solid var(--gray-800); display: flex; align-items: center; gap: 0.5rem; color: var(--gray-500); font-size: 0.7rem; font-weight: 600; }
+    .dot { width: 8px; height: 8px; background: var(--yellow); border-radius: 50%; }
+    
+    /* Platform Demo Links (The 4 Buttons) */
+    .demo-section { background: var(--gray-100); padding: 4rem 2rem; border-top: 1px solid #E5E7EB; text-align: center; }
+    .demo-section h2 { font-size: 2rem; font-weight: 800; margin-bottom: 1rem; }
+    .demo-section > p { color: var(--gray-500); margin-bottom: 3rem; }
+    .demo-grid { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .demo-card { background: white; border: 2px solid var(--black); border-radius: 12px; padding: 1.5rem; text-decoration: none; color: inherit; display: flex; flex-direction: column; box-shadow: 4px 4px 0px 0px rgba(0,0,0,0.1); transition: all 0.2s; text-align: left; }
+    .demo-card:hover { transform: translateY(-4px); box-shadow: 4px 8px 0px 0px rgba(0,0,0,0.2); border-color: var(--yellow-dark); }
+    .demo-card h3 { font-size: 1.1rem; font-weight: 800; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
+    .demo-card p { font-size: 0.9rem; color: var(--gray-500); }
+    .demo-number { background: var(--yellow); color: var(--black); width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800; }
+
+    /* Toast */
+    .toast { position: fixed; bottom: 2rem; right: 2rem; background: var(--black); color: white; padding: 1rem 1.5rem; border-radius: 8px; border: 1px solid var(--gray-800); display: flex; align-items: center; gap: 0.75rem; font-size: 0.9rem; font-weight: 600; transform: translateY(100px); opacity: 0; transition: all 0.3s; z-index: 100; }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast-dot { width: 10px; height: 10px; background: var(--yellow); border-radius: 50%; }
+
+    @media (max-width: 900px) {
+      .hero-container { grid-template-columns: 1fr; }
+      .demo-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
 
   <!-- Top Nav -->
-  <div class="nav">
-    <div class="logo">Transcrib<span>.her</span></div>
-    <div style="font-size: 0.9rem; color: #94a3b8;">AU Hackathon 2026</div>
-  </div>
+  <header class="navbar">
+    <div class="logo">
+      Transcribe<span>'</span>Her
+      <span class="badge">by BBSMD</span>
+    </div>
+    <div style="font-size: 0.9rem; font-weight: 600; color: var(--gray-500);">AU Hackathon 2026</div>
+  </header>
 
   <!-- Hero Section -->
-  <div class="hero">
-    <div class="badge">B2B Voice Infrastructure</div>
-    <h1>Bridging the literacy gap through voice.</h1>
-    <p>Transcrib.her is the API infrastructure powering Sidaamu Afoo speech recognition and synthesis. We don't build the apps—we power the banks and NGOs that serve unbanked communities.</p>
-  </div>
+  <main class="hero-container">
+    
+    <!-- Left Column: Text -->
+    <div class="hero-text">
+      <div class="badge" style="margin-bottom: 1rem; display: inline-block;">API-First Accessibility Engine</div>
+      
+      <h1>
+        Forms with <br>
+        <span class="highlight">Integrated</span><br>
+        <span class="highlight">Transcription.</span>
+      </h1>
+      
+      <p>
+        Configure dynamic forms in <strong>Sidaamu Afoo</strong> and <strong>Amharic</strong> with built-in two-way Voice-to-Text (STT) and Text-to-Speech (TTS). Deploy on-site or remotely and stream structured responses directly into your own database via a single REST API.
+      </p>
 
-  <!-- Pitch Section -->
-  <div class="pitch-section">
-    <div class="pitch-grid">
-      <div class="pitch-box">
-        <h3>The Problem</h3>
-        <p>Millions of women in rural Ethiopia face a severe literacy barrier. They are highly knowledgeable but cannot read or write formal documents. This locks them out of microfinance, healthcare, and digital banking, often leading to shame at service counters.</p>
+      <div class="btn-group">
+        <a href="org.html" class="btn-primary" onclick="showToast('Generating API Key...')">
+          <span>🔑</span> Get API Access
+        </a>
+        <a href="user.html" class="btn-secondary">
+          <span>💻</span> Explore API Docs
+        </a>
       </div>
-      <div class="pitch-box">
-        <h3>Our Solution</h3>
-        <p>We built a voice-first AI engine for low-resource languages. Organizations use our API to let users <b>speak</b> their answers instead of typing. Our AI transcribes the voice and fills the forms automatically. No reading required.</p>
+
+      <!-- Feature Strip -->
+      <div class="feature-strip">
+        <div class="feature">
+          <div class="feature-icon">🌍</div>
+          <div class="feature-text">
+            <h4>Sidaamu & Amharic</h4>
+            <p>Scalable to more languages</p>
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🎙️</div>
+          <div class="feature-text">
+            <h4>Two-Way STT & TTS</h4>
+            <p>Voice & text accessibility</p>
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🗄️</div>
+          <div class="feature-text">
+            <h4>Direct-to-DB API</h4>
+            <p>Zero third-party vaults</p>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Interactive Demo Section -->
-  <div class="demo-section">
+    <!-- Right Column: Console -->
+    <div class="console-box">
+      <div style="height: 6px; background: var(--yellow); width: 100%;"></div>
+      
+      <div class="console-top">
+        <div class="console-tabs">
+          <button class="console-tab active">API Quickstart</button>
+          <button class="console-tab">Form Pipeline</button>
+        </div>
+        <div class="console-status">
+          <span class="dot" style="display: inline-block; margin-right: 0.5rem;"></span> REST v1.0
+        </div>
+      </div>
+
+      <div class="console-content">
+        <div class="endpoint-box">
+          <div>
+            <span class="method-badge">POST</span>
+            <span class="endpoint-url">https://api.transcribeher.et/v1/forms</span>
+          </div>
+          <span style="color: var(--gray-500); font-size: 0.8rem; cursor: pointer;" onclick="showToast('Endpoint Copied!')">📋 Copy</span>
+        </div>
+
+        <div class="json-box">
+          <div class="json-header">
+            <span>Request Body (JSON)</span>
+            <span style="color: var(--yellow);">badrex + mms-tts-sid</span>
+          </div>
+          <div class="json-body">
+{
+  "title": "Community Intake Form",
+  "language": "sid",
+  "deployment_mode": "in_place",
+  "transcription": {
+    "stt_model": "badrex",
+    "tts_model": "facebook/mms-tts-sid",
+    "audio_privacy": "headphone_audio_opt_in"
+  },
+  "fields": [
+    {
+      "id": "respondent_name",
+      "prompt": "Su’makki maati?",
+      "input_modes": ["voice_stt", "text"]
+    }
+  ],
+  "webhook_db_url": "https://db.your-org.et/api/intake"
+}</div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="color: var(--gray-500); font-size: 0.8rem;">Runs live schema validation</span>
+          <button class="btn-primary" style="padding: 0.5rem 1rem; font-size: 0.9rem; box-shadow: none;" onclick="showToast('API Call Tested Successfully!')">
+            ▶ Test API Call
+          </button>
+        </div>
+      </div>
+
+      <div class="console-footer">
+        <span class="dot"></span>
+        API Online • Direct DB Streaming • Zero Data Lock-In
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Demo Section (The 4 Buttons) -->
+  <section class="demo-section">
     <h2>Platform Architecture</h2>
-    <p>We've built a complete B2B SaaS platform. Explore the live technical demonstration below.</p>
+    <p>Explore the live technical demonstration of our B2B SaaS engine.</p>
     
-    <div class="options">
-      <!-- 1. Enterprise Portal -->
-      <a href="org.html" class="option-card">
-        <h3><span class="icon">🏢</span> 1. Enterprise Portal</h3>
-        <p>Where a bank or NGO registers their organization and generates a secure API key to access the Transcrib.her engine.</p>
+    <div class="demo-grid">
+      <!-- Button 1 -->
+      <a href="org.html" class="demo-card">
+        <h3><span class="demo-number">1</span> Enterprise Portal</h3>
+        <p>Where a bank or NGO registers their organization and generates a secure API key to access the Transcribe'Her engine.</p>
       </a>
       
-      <!-- 2. Form Builder -->
-      <a href="createorg.html" class="option-card">
-        <h3><span class="icon">🛠️</span> 2. Form Builder (Admin)</h3>
+      <!-- Button 2 -->
+      <a href="createorg.html" class="demo-card">
+        <h3><span class="demo-number">2</span> Form Builder</h3>
         <p>The no-code dashboard where organizations dynamically add custom questions in Sidaamu Afoo and save them to our database.</p>
       </a>
       
-      <!-- 3. Institution View -->
-      <a href="institution.html" class="option-card">
-        <h3><span class="icon">📱</span> 3. Institution View (Live)</h3>
+      <!-- Button 3 -->
+      <a href="institution.html" class="demo-card">
+        <h3><span class="demo-number">3</span> Institution View</h3>
         <p>The end-user experience. This pulls the dynamic forms from our database. Users press "play" to hear the question and "speak" to fill it out.</p>
       </a>
       
-      <!-- 4. User Playground -->
-      <a href="user.html" class="option-card">
-        <h3><span class="icon">🎙️</span> 4. Developer Playground</h3>
+      <!-- Button 4 -->
+      <a href="user.html" class="demo-card">
+        <h3><span class="demo-number">4</span> Developer Playground</h3>
         <p>A public sandbox where developers can test the raw Text-to-Speech and Speech-to-Text API endpoints for any use case.</p>
       </a>
     </div>
+  </section>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast">
+    <span class="toast-dot"></span>
+    <span id="toast-msg">Action completed</span>
   </div>
 
-  <!-- Footer -->
-  <div class="footer">
-    &copy; 2026 Transcrib.her. Built at the African Union Hackathon, Hawassa University.
-  </div>
-
+  <script>
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-msg').textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+  </script>
 </body>
 </html>
