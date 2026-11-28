@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hayyo Voice — Loan Application</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); color: #e2e8f0; min-height: 100vh; padding: 2rem 1rem; }
+    .container { max-width: 640px; margin: 0 auto; }
+    .nav { margin-bottom: 1rem; }
+    .nav a { color: #60a5fa; text-decoration: none; font-weight: 600; }
+    .nav a:hover { text-decoration: underline; }
+    h1 { text-align: center; margin-bottom: 0.5rem; font-size: 2rem; }
+    .subtitle { text-align: center; color: #94a3b8; margin-bottom: 2rem; }
+    .form-card { background: rgba(30, 41, 59, 0.85); border: 1px solid #334155; border-radius: 16px; padding: 2rem; backdrop-filter: blur(10px); }
+    .field { margin-bottom: 1.5rem; }
+    .field-label { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem; font-weight: 600; }
+    .btn-group { display: flex; gap: 0.5rem; }
+    .icon-btn { width: 44px; height: 44px; border: 1px solid #475569; background: #1e293b; color: #e2e8f0; border-radius: 8px; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+    .icon-btn:hover { border-color: #60a5fa; background: #1e3a8a; }
+    .icon-btn:disabled { opacity: 0.5; cursor: wait; }
+    .icon-btn.recording { background: #dc2626; border-color: #dc2626; animation: pulse 1s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+    input[type="text"] { width: 100%; padding: 0.75rem; background: #0f172a; border: 1px solid #475569; border-radius: 8px; color: #e2e8f0; font-size: 1rem; font-family: inherit; }
+    input[type="text"]:focus { outline: none; border-color: #60a5fa; }
+    .status { text-align: center; padding: 0.75rem; margin: 1rem 0; border-radius: 8px; font-size: 0.9rem; display: none; }
+    .status.info { display: block; background: #1e3a8a; color: #93c5fd; }
+    .status.error { display: block; background: #7f1d1d; color: #fecaca; }
+    .status.success { display: block; background: #14532d; color: #86efac; }
+    #player { width: 100%; margin-bottom: 1rem; }
+    .submit-btn { width: 100%; padding: 1rem; background: #059669; color: white; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 600; cursor: pointer; margin-top: 1rem; }
+    .submit-btn:hover { background: #047857; }
+    .footer { text-align: center; margin-top: 2rem; color: #64748b; font-size: 0.85rem; }
+    .debug-box { margin-top: 2rem; background: #000; color: #10b981; padding: 1rem; border-radius: 8px; font-family: monospace; font-size: 0.8rem; max-height: 200px; overflow-y: auto; border: 1px solid #334155; white-space: pre-wrap; overflow-wrap: anywhere; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="nav"><a href="org.html">← Back to Dashboard</a></div>
+    <h1>🇪🇹 Hayyo Voice</h1>
+    <p class="subtitle">Voice Loan Application — Sidaamu Afoo</p>
+
+    <div id="status" class="status"></div>
+    <audio id="player" controls hidden></audio>
+
+    <div class="form-card">
+      <div class="field">
+        <div class="field-label">
+          <span>Su'makki borreessi</span>
+          <div class="btn-group">
+            <button class="icon-btn play-btn" data-question="Su'makki borreessi?">🔊</button>
+            <button class="icon-btn mic-btn" data-target="name">🎤</button>
+          </div>
+        </div>
+        <input type="text" id="name" />
+      </div>
+
+      <div class="field">
+        <div class="field-label">
+          <span>Aganunni mageeshshi eo afidhinanni</span>
+          <div class="btn-group">
+            <button class="icon-btn play-btn" data-question="Aganunni mageeshshi eo afidhinanni?">🔊</button>
+            <button class="icon-btn mic-btn" data-target="amount">🎤</button>
+          </div>
+        </div>
+        <input type="text" id="amount" />
+      </div>
+
+      <div class="field">
+        <div class="field-label">
+          <span>Afidhinoonno eo giddonni mageeshshi womaashsha suuqidhinanni</span>
+          <div class="btn-group">
+            <button class="icon-btn play-btn" data-question="Afidhinoonno eo giddonni mageeshshi womaashsha suuqidhinanni?">🔊</button>
+            <button class="icon-btn mic-btn" data-target="purpose">🎤</button>
+          </div>
+        </div>
+        <input type="text" id="purpose" />
+      </div>
+
+      <div class="field">
+        <div class="field-label">
+          <span>Monthly Income</span>
+          <div class="btn-group">
+            <button class="icon-btn play-btn" data-question="Monthly Income?">🔊</button>
+            <button class="icon-btn mic-btn" data-target="income">🎤</button>
+          </div>
+        </div>
+        <input type="text" id="income" />
+      </div>
+
+      <div class="field">
+        <div class="field-label">
+          <span>Phone Number</span>
+          <div class="btn-group">
+            <button class="icon-btn play-btn" data-question="Phone Number?">🔊</button>
+            <button class="icon-btn mic-btn" data-target="phone">🎤</button>
+          </div>
+        </div>
+        <input type="text" id="phone" />
+      </div>
+
+      <button class="submit-btn" id="submit-btn">Submit Application</button>
+    </div>
+
+    <p class="footer">Built at AU Hackathon, Hawassa</p>
+    <div class="debug-box" id="debug-log">> Waiting for actions...</div>
+  </div>
+
+  <script>
+    const BASE = "https://hayyoai1000me-sidaama-voice-code-her.hf.space";
+    const API = BASE + "/gradio_api";
+
+    const statusEl = document.getElementById('status');
+    const debugLog = document.getElementById('debug-log');
+    const player = document.getElementById('player');
+    const ttsCache = new Map();
+    let activeRecorder = null;
+
+    function logDebug(msg) {
+      console.log(msg);
+      debugLog.textContent += `\n> ${msg}`;
+      debugLog.scrollTop = debugLog.scrollHeight;
+    }
+
+    function showStatus(msg, type = 'info') {
+      statusEl.className = 'status ' + type;
+      statusEl.textContent = msg;
+    }
+    function hideStatus() {
+      statusEl.className = 'status';
+      statusEl.textContent = '';
+    }
+
+    async function request(step, url, options = {}) {
+      let res;
+      try { res = await fetch(url, options); } 
+      catch (e) { throw new Error(`${step}: cannot reach the Space (${e.message})`); }
+      if (!res.ok) {
+        const body = (await res.text()).slice(0, 200);
+        throw new Error(`${step}: HTTP ${res.status} ${body}`);
+      }
+      return res;
+    }
+
+    function parseResult(stream) {
+      let event = '';
+      for (const line of stream.split(/\r?\n/)) {
+        if (line.startsWith('event:')) event = line.slice(6).trim();
+        else if (line.startsWith('data:')) {
+          const data = line.slice(5).trim();
+          if (event === 'complete') return JSON.parse(data);
+          if (event === 'error') throw new Error(`Server error: ${data === 'null' ? 'check logs' : data}`);
+        }
+      }
+      throw new Error('Connection closed before result');
+    }
+
+    async function callApi(name, data) {
+      const start = await request(`Start ${name}`, `${API}/call/${name}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data })
+      });
+      const { event_id } = await start.json();
+      logDebug(`Job queued (${name}). Waiting...`);
+      const result = await request(`Result ${name}`, `${API}/call/${name}/${event_id}`);
+      return parseResult(await result.text());
+    }
+
+    async function uploadFile(file) {
+      const form = new FormData();
+      form.append('files', file);
+      const res = await request('Upload', `${API}/upload`, { method: 'POST', body: form });
+      const [path] = await res.json();
+      return { path, orig_name: file.name, meta: { _type: 'gradio.FileData' } };
+    }
+
+    function hexToBlob(hex) {
+      const bytes = new Uint8Array(hex.length / 2);
+      for (let i = 0; i < hex.length; i += 2) bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16);
+      return new Blob([bytes], { type: 'audio/wav' });
+    }
+
+    async function textToSpeech(text) {
+      if (!ttsCache.has(text)) {
+        const [hex] = await callApi('speak', [text]);
+        if (typeof hex !== 'string' || !/^52494646[0-9a-f]+$/i.test(hex)) throw new Error('No audio returned');
+        ttsCache.set(text, URL.createObjectURL(hexToBlob(hex)));
+      }
+      return ttsCache.get(text);
+    }
+
+    async function speechToText(file) {
+      const fileData = await uploadFile(file);
+      const [text] = await callApi('transcribe', [fileData]);
+      if (typeof text === 'string' && text.startsWith('Error:')) throw new Error(text);
+      return text;
+    }
+
+    document.querySelectorAll('.play-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const question = btn.dataset.question;
+        btn.disabled = true;
+        showStatus('⏳ Generating voice...');
+        logDebug(`Sending TTS: "${question}"`);
+        try {
+          player.src = await textToSpeech(question);
+          player.hidden = false;
+          try { await player.play(); hideStatus(); } 
+          catch (e) { showStatus('▶️ Audio is ready. Press play.', 'info'); }
+        } catch (e) {
+          logDebug(`TTS Error: ${e.message}`);
+          showStatus('❌ Failed. See debug box.', 'error');
+        } finally { btn.disabled = false; }
+      });
+    });
+
+    document.querySelectorAll('.mic-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const input = document.getElementById(btn.dataset.target);
+        if (activeRecorder && activeRecorder.state === 'recording') { activeRecorder.stop(); return; }
+        try {
+          player.pause();
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          const recorder = new MediaRecorder(stream);
+          const chunks = [];
+          activeRecorder = recorder;
+          recorder.ondataavailable = e => chunks.push(e.data);
+          recorder.onstop = async () => {
+            btn.classList.remove('recording');
+            stream.getTracks().forEach(t => t.stop());
+            btn.disabled = true;
+            const type = recorder.mimeType || 'audio/webm';
+            const ext = type.includes('mp4') ? 'm4a' : type.includes('ogg') ? 'ogg' : 'webm';
+            const file = new File(chunks, `recording.${ext}`, { type });
+            showStatus('⏳ Transcribing...');
+            logDebug(`Recorded ${file.size} bytes (${ext}). Sending to ASR...`);
+            try {
+              const text = await speechToText(file);
+              if (text) {
+                input.value = text;
+                showStatus('✅ Transcribed', 'success');
+                setTimeout(hideStatus, 1500);
+              } else { showStatus('No speech detected. Try again.', 'error'); }
+            } catch (e) {
+              logDebug(`ASR Error: ${e.message}`);
+              showStatus('❌ Transcription failed. See debug box.', 'error');
+            } finally { btn.disabled = false; }
+          };
+          recorder.start();
+          btn.classList.add('recording');
+          showStatus('🔴 Recording... tap again to stop', 'info');
+        } catch (e) {
+          logDebug(`Mic Error: ${e.name}: ${e.message}`);
+          showStatus('❌ Could not start the microphone.', 'error');
+        }
+      });
+    });
+
+    document.getElementById('submit-btn').addEventListener('click', () => {
+      showStatus('✅ Application submitted!', 'success');
+      logDebug("Submit clicked.");
+    });
+
+    logDebug('Page ready.');
+    fetch(BASE, { mode: 'no-cors' }).then(() => logDebug('Pre-wake ping sent.')).catch(() => {});
+  </script>
+</body>
+</html>
