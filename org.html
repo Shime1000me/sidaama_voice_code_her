@@ -10,9 +10,11 @@
     .back { color: #60a5fa; text-decoration: none; display: inline-block; margin-bottom: 2rem; }
     .card { background: #1e293b; padding: 2rem; border-radius: 12px; border: 1px solid #334155; }
     h2 { color: #60a5fa; margin-bottom: 1rem; }
-    .btn { background: #059669; color: white; padding: 1rem 2rem; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 1rem; }
+    label { display: block; margin-top: 1rem; color: #94a3b8; font-size: 0.9rem; }
+    input { width: 100%; padding: 0.75rem; margin-top: 0.5rem; background: #0f172a; border: 1px solid #475569; color: white; border-radius: 8px; }
+    .btn { background: #059669; color: white; padding: 1rem 2rem; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 1rem; margin-top: 1.5rem; }
     .btn:hover { background: #047857; }
-    .key-box { display: none; background: #0f172a; padding: 1rem; border: 1px dashed #475569; border-radius: 8px; font-family: monospace; margin-top: 1rem; display: flex; justify-content: space-between; }
+    .key-box { display: none; background: #0f172a; padding: 1rem; border: 1px dashed #475569; border-radius: 8px; font-family: monospace; margin-top: 1rem; justify-content: space-between; }
     .next-btn { display: none; margin-top: 1rem; text-align: center; }
     .next-btn a { color: #60a5fa; text-decoration: none; }
   </style>
@@ -21,13 +23,18 @@
   <div class="container">
     <a href="index.html" class="back">← Back to Home</a>
     <div class="card">
-      <h2>1. Your API Key</h2>
-      <p style="color: #94a3b8; margin-bottom: 1rem;">Generate your secure key to access the Hayyo Voice API.</p>
-      <button class="btn" id="gen-btn" onclick="generateKey()">Generate API Key ($49/mo)</button>
+      <h2>Register Your Organization</h2>
+      
+      <label>Organization Name</label>
+      <input type="text" id="org_name" placeholder="e.g., Hawassa Microfinance">
+      
+      <button class="btn" id="gen-btn" onclick="registerOrg()">Generate API Key ($49/mo)</button>
+      
       <div class="key-box" id="key-box">
         <span id="key-text"></span>
         <button onclick="copyKey()" style="background: #475569; color: white; border: none; padding: 0.2rem 0.5rem; border-radius: 4px; cursor: pointer;">Copy</button>
       </div>
+      
       <div class="next-btn" id="next-btn">
         <a href="createorg.html">Go to Form Builder →</a>
       </div>
@@ -36,19 +43,24 @@
 
   <script>
     const SUPABASE_URL = "https://dhcojcnwjcyrcymgqhme.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_ve3P0-iuAiLl78Ra_AWjEw__b7wSNG8";
+    const SUPABASE_KEY = "sb_secret_oiy7bGZM9K5giduxLxLj8Q_uwxphX8-"; 
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    async function generateKey() {
+    async function registerOrg() {
+      const name = document.getElementById('org_name').value;
+      if (!name) return alert("Please enter an organization name.");
+
       document.getElementById('gen-btn').textContent = "Generating...";
       const newKey = "sk_live_" + Math.random().toString(36).substring(2, 10);
       
-      const { error } = await supabaseClient.from('organizations').insert([{ api_key: newKey }]);
+      // Save to database
+      const { error } = await supabaseClient.from('organizations').insert([{ api_key: newKey, org_name: name }]);
       
       if (error) {
         alert("Database Error: " + error.message);
         document.getElementById('gen-btn').textContent = "Generate API Key ($49/mo)";
       } else {
+        document.getElementById('org_name').disabled = true;
         document.getElementById('gen-btn').style.display = 'none';
         document.getElementById('key-text').textContent = newKey;
         document.getElementById('key-box').style.display = 'flex';
