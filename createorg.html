@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Form Builder</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     body { font-family: sans-serif; background: #0f172a; color: white; padding: 3rem; }
     .container { max-width: 600px; margin: 0 auto; }
@@ -39,23 +40,28 @@
   </div>
 
   <script>
-    function saveForm() {
+    const SUPABASE_URL = "https://dhcojcnwjcyrcymgqhme.supabase.co";
+    const SUPABASE_KEY = "sb_secret_oiy7bGZM9K5giduxLxLj8Q_uwxphX8-"; 
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    async function saveForm() {
       const key = document.getElementById('api_key').value;
       const q1 = document.getElementById('q1').value;
       const q2 = document.getElementById('q2').value;
 
-      const savedKey = localStorage.getItem('hayyo_api_key');
-      
-      // If there is no key in memory, or it doesn't match
-      if (!key || key !== savedKey) {
-        return alert("Invalid API Key. Please generate a new one in the Enterprise Portal.");
+      if(!key) return alert("Please enter your API Key");
+
+      const { data, error } = await supabaseClient
+        .from('organizations')
+        .update({ q1: q1, q2: q2 })
+        .eq('api_key', key)
+        .select();
+
+      if (error || data.length === 0) {
+        alert("Invalid API Key. Please check and try again.");
+      } else {
+        document.getElementById('success-msg').style.display = 'block';
       }
-
-      // Save questions
-      localStorage.setItem('hayyo_q1', q1);
-      localStorage.setItem('hayyo_q2', q2);
-
-      document.getElementById('success-msg').style.display = 'block';
     }
   </script>
 </body>
