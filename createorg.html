@@ -11,6 +11,14 @@
     h2 { color: #60a5fa; margin-bottom: 1rem; }
     label { display: block; margin-top: 1rem; color: #94a3b8; font-size: 0.9rem; }
     input { width: 100%; padding: 0.75rem; margin-top: 0.5rem; background: #0f172a; border: 1px solid #475569; color: white; border-radius: 8px; }
+    
+    .dynamic-field { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+    .dynamic-field input { margin-top: 0; }
+    .remove-btn { background: #dc2626; color: white; border: none; border-radius: 8px; padding: 0 1rem; cursor: pointer; font-weight: bold; }
+    
+    .add-btn { background: #475569; color: white; padding: 0.75rem 1rem; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 1rem; width: 100%; border: 1px dashed #94a3b8; }
+    .add-btn:hover { background: #334155; }
+    
     .btn { background: #059669; color: white; padding: 1rem 2rem; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 1.5rem; }
     .success { display: none; margin-top: 1rem; background: #14532d; color: #86efac; padding: 1rem; border-radius: 8px; text-align: center; }
     .success a { color: #60a5fa; font-weight: bold; }
@@ -20,17 +28,21 @@
   <div class="container">
     <a href="index.html" class="back">← Back to Home</a>
     <div class="card">
-      <h2>Add Form Questions</h2>
+      <h2>Build Your Custom Form</h2>
+      
       <label>API Key</label>
       <input type="text" id="api_key" placeholder="Paste your sk_live_... key">
       
-      <label>Question 1 (Sidaamu Afoo)</label>
-      <input type="text" id="q1" value="Su'makki borreessi?">
-      
-      <label>Question 2 (Sidaamu Afoo)</label>
-      <input type="text" id="q2" value="Aganunni mageeshshi eo afidhinanni?">
-      
+      <div id="questions-container">
+        <label>Question 1</label>
+        <div class="dynamic-field">
+          <input type="text" class="question-input" value="Su'makki borreessi?">
+        </div>
+      </div>
+
+      <button class="add-btn" onclick="addQuestion()">+ Add Another Question</button>
       <button class="btn" onclick="saveForm()">Generate Live Form</button>
+      
       <div class="success" id="success-msg">
         ✅ Form Created! <br><br>
         <a href="institution.html">Open Institution Directory →</a>
@@ -39,10 +51,32 @@
   </div>
 
   <script>
+    function addQuestion() {
+      const container = document.getElementById('questions-container');
+      const count = container.querySelectorAll('.dynamic-field').length + 1;
+      
+      const div = document.createElement('div');
+      div.innerHTML = `
+        <label>Question ${count}</label>
+        <div class="dynamic-field">
+          <input type="text" class="question-input" placeholder="Enter Sidaamu Afoo question">
+          <button class="remove-btn" onclick="this.parentElement.parentElement.remove()">X</button>
+        </div>
+      `;
+      container.appendChild(div);
+    }
+
     function saveForm() {
       const key = document.getElementById('api_key').value;
-      const q1 = document.getElementById('q1').value;
-      const q2 = document.getElementById('q2').value;
+      const inputs = document.querySelectorAll('.question-input');
+      const questions = [];
+
+      inputs.forEach(input => {
+        if (input.value.trim()) questions.push(input.value.trim());
+      });
+
+      if(!key) return alert("Please enter your API Key");
+      if(questions.length === 0) return alert("Please add at least one question");
 
       let orgs = JSON.parse(localStorage.getItem('hayyo_orgs')) || [];
       const orgIndex = orgs.findIndex(o => o.key === key);
@@ -51,8 +85,8 @@
         return alert("Invalid API Key. Please check and try again.");
       }
 
-      orgs[orgIndex].q1 = q1;
-      orgs[orgIndex].q2 = q2;
+      // Save the array of questions
+      orgs[orgIndex].questions = questions;
       localStorage.setItem('hayyo_orgs', JSON.stringify(orgs));
 
       document.getElementById('success-msg').style.display = 'block';
