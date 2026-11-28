@@ -9,11 +9,13 @@
     .back { color: #60a5fa; text-decoration: none; display: inline-block; margin-bottom: 1rem; }
     h1 { text-align: center; margin-bottom: 0.5rem; }
     .subtitle { text-align: center; color: #94a3b8; margin-bottom: 2rem; }
+    
     .directory-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
     .org-card { background: #1e293b; padding: 1.5rem; border-radius: 12px; border: 1px solid #334155; cursor: pointer; transition: 0.2s; text-align: center; }
     .org-card:hover { border-color: #60a5fa; transform: translateY(-2px); }
     .org-card h3 { color: #60a5fa; margin-bottom: 0.5rem; }
     .org-card p { color: #94a3b8; font-size: 0.9rem; }
+
     .form-card { background: rgba(30, 41, 59, 0.85); padding: 2rem; border-radius: 16px; border: 1px solid #334155; display: none; }
     .field { margin-bottom: 1.5rem; }
     .label { font-weight: bold; margin-bottom: 0.5rem; display: flex; justify-content: space-between; }
@@ -41,18 +43,12 @@
       <a class="back-btn" onclick="backToDirectory()">← Back to Directory</a>
       <h1 id="org-title"></h1>
       <p class="subtitle">Voice Application</p>
+      
       <div id="status" class="status"></div>
       <audio id="player" controls hidden></audio>
 
-      <div class="form-card" style="display: block;">
-        <div class="field">
-          <div class="label"><span id="q1-label"></span><span><button class="icon-btn" id="play1">🔊</button> <button class="icon-btn" id="mic1">🎤</button></span></div>
-          <input type="text" id="ans1" />
-        </div>
-        <div class="field">
-          <div class="label"><span id="q2-label"></span><span><button class="icon-btn" id="play2">🔊</button> <button class="icon-btn" id="mic2">🎤</button></span></div>
-          <input type="text" id="ans2" />
-        </div>
+      <div class="form-card" style="display: block;" id="dynamic-form-container">
+        <!-- Dynamic questions will be injected here -->
         <button class="submit-btn" onclick="alert('Application Submitted!')">Submit Application</button>
       </div>
     </div>
@@ -65,8 +61,6 @@
     const statusEl = document.getElementById('status');
     const ttsCache = new Map();
     let activeRecorder = null;
-    let currentQ1 = "";
-    let currentQ2 = "";
 
     function showStatus(msg, type) { statusEl.className = 'status ' + type; statusEl.textContent = msg; }
     async function request(step, url, options = {}) { let res = await fetch(url, options); if (!res.ok) throw new Error(`${step} Error`); return res; }
@@ -84,7 +78,7 @@
       let count = 0;
       
       orgs.forEach(org => {
-        if (org.q1) {
+        if (org.questions && org.questions.length > 0) {
           count++;
           const card = document.createElement('div');
           card.className = 'org-card';
@@ -103,22 +97,52 @@
       document.getElementById('directory-view').style.display = 'none';
       document.getElementById('form-view').style.display = 'block';
       document.getElementById('org-title').textContent = org.name;
-      document.getElementById('q1-label').textContent = org.q1;
-      document.getElementById('q2-label').textContent = org.q2;
-      currentQ1 = org.q1;
-      currentQ2 = org.q2;
+      
+      const container = document.getElementById('dynamic-form-container');
+      container.innerHTML = ""; // Clear old fields
+
+      // Build the form dynamically based on the questions array
+      org.questions.forEach((questionText, index) => {
+        const fieldDiv = document.createElement('div');
+        fieldDiv.className = 'field';
+        fieldDiv.innerHTML = `
+          <div class="label">
+            <span>${questionText}</span>
+            <span>
+              <button class="icon-btn play-btn">🔊</button>
+              <button class="icon-btn mic-btn" id="mic-${index}">🎤</button>
+            </span>
+          </div>
+          <input type="text" id="ans-${index}" />
+        `;
+        container.appendChild(fieldDiv);
+        
+        // Wire up the play and mic buttons for this specific field
+        const playBtn = fieldDiv.querySelector('.play-btn');
+        const micBtn = fieldDiv.querySelector('.mic-btn');
+        const input = fieldDiv.querySelector('input');
+        
+        playBtn.onclick = async () => { 
+          showStatus('⏳ Loading Audio...','info'); 
+          player.src = await textToSpeech(questionText); 
+          player.hidden=false; player.play(); statusEl.className='status'; 
+        };
+        
+        micBtn.onclick = () => handleMic(micBtn, input);
+      });
+
+      // Add submit button back at the bottom
+      const submitBtn = document.createElement('button');
+      submitBtn.className = 'submit-btn';
+      submitBtn.textContent = 'Submit Application';
+      submitBtn.onclick = () => alert('Application Submitted!');
+      container.appendChild(submitBtn);
     }
 
     function backToDirectory() {
       document.getElementById('directory-view').style.display = 'block';
       document.getElementById('form-view').style.display = 'none';
     }
-
-    document.getElementById('play1').onclick = async () => { showStatus('⏳ Loading Audio...','info'); player.src = await textToSpeech(currentQ1); player.hidden=false; player.play(); statusEl.className='status'; };
-    document.getElementById('play2').onclick = async () => { showStatus('⏳ Loading Audio...','info'); player.src = await textToSpeech(currentQ2); player.hidden=false; player.play(); statusEl.className='status'; };
-
-    document.getElementById('mic1').onclick = () => handleMic(document.getElementById('mic1'), document.getElementById('ans1'));
-    document.getElementById('mic2').onclick = () => handleMic(document.getElementById('mic2'), document.getElementById('ans2'));
 
     async function handleMic(btn, input) {
       if (activeRecorder && activeRecorder.state === 'recording') { activeRecorder.stop(); return; }
