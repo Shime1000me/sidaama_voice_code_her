@@ -2,54 +2,107 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Institution Directory</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Institution Directory — Transcribe'Her</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
-    body { font-family: sans-serif; background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); color: white; min-height: 100vh; padding: 2rem 1rem; }
-    .container { max-width: 800px; margin: 0 auto; }
-    .back { color: #60a5fa; text-decoration: none; display: inline-block; margin-bottom: 1rem; }
-    h1 { text-align: center; margin-bottom: 0.5rem; }
-    .subtitle { text-align: center; color: #94a3b8; margin-bottom: 2rem; }
+    :root {
+      --yellow: #FACC15;
+      --yellow-dark: #EAB308;
+      --black: #0A0A0A;
+      --gray-500: #6B7280;
+      --gray-100: #F3F4F6;
+      --white: #FFFFFF;
+      --red: #dc2626;
+      --green: #059669;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--gray-100); color: var(--black); min-height: 100vh; display: flex; flex-direction: column; }
     
-    .directory-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-    .org-card { background: #1e293b; padding: 1.5rem; border-radius: 12px; border: 1px solid #334155; cursor: pointer; transition: 0.2s; text-align: center; }
-    .org-card:hover { border-color: #60a5fa; transform: translateY(-2px); }
-    .org-card h3 { color: #60a5fa; margin-bottom: 0.5rem; }
-    .org-card p { color: #94a3b8; font-size: 0.9rem; }
+    /* Top Nav */
+    .navbar { border-bottom: 1px solid #E5E7EB; padding: 1rem 2rem; background: white; display: flex; justify-content: flex-start; align-items: center; position: sticky; top: 0; z-index: 50; }
+    .logo { font-size: 1.5rem; font-weight: 800; display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: var(--black); }
+    .logo span { color: var(--yellow-dark); }
+    
+    /* Main Layout */
+    .main-content { flex: 1; padding: 3rem 1rem; display: flex; justify-content: center; }
+    .container { max-width: 800px; width: 100%; }
+    .back { color: var(--gray-500); text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem; font-weight: 600; font-size: 0.9rem; transition: color 0.2s; }
+    .back:hover { color: var(--black); }
+    
+    /* Typography */
+    h1 { font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; }
+    .subtitle { color: var(--gray-500); margin-bottom: 2rem; font-size: 1rem; }
+    
+    /* Directory Grid */
+    .directory-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .org-card { background: white; padding: 1.5rem; border-radius: 12px; border: 2px solid var(--black); box-shadow: 4px 4px 0px 0px rgba(0,0,0,0.1); cursor: pointer; transition: all 0.2s; text-align: left; }
+    .org-card:hover { transform: translateY(-4px); box-shadow: 4px 8px 0px 0px rgba(0,0,0,0.2); border-color: var(--yellow-dark); }
+    .org-card h3 { font-size: 1.2rem; font-weight: 800; margin-bottom: 0.5rem; }
+    .org-card p { color: var(--gray-500); font-size: 0.9rem; }
 
-    .form-card { background: rgba(30, 41, 59, 0.85); padding: 2rem; border-radius: 16px; border: 1px solid #334155; display: none; }
+    /* Form View */
+    .form-card { background: white; padding: 2.5rem; border-radius: 16px; border: 2px solid var(--black); box-shadow: 6px 6px 0px 0px var(--black); display: none; }
     .field { margin-bottom: 1.5rem; }
-    .label { font-weight: bold; margin-bottom: 0.5rem; display: flex; justify-content: space-between; }
-    input { width: 100%; padding: 0.75rem; background: #0f172a; border: 1px solid #475569; color: white; border-radius: 8px; }
-    .icon-btn { background: #1e293b; border: 1px solid #475569; color: white; padding: 0.5rem; border-radius: 8px; cursor: pointer; }
-    .status { text-align: center; padding: 1rem; margin: 1rem 0; border-radius: 8px; display: none; }
-    .status.info { display: block; background: #1e3a8a; }
-    .status.success { display: block; background: #14532d; }
+    .label { font-weight: 700; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; }
+    input { width: 100%; padding: 0.75rem 1rem; background: white; border: 2px solid #E5E7EB; color: var(--black); border-radius: 8px; font-family: inherit; font-size: 1rem; transition: border-color 0.2s; }
+    input:focus { outline: none; border-color: var(--yellow-dark); }
+    
+    /* Icon Buttons */
+    .btn-group { display: flex; gap: 0.5rem; }
+    .icon-btn { background: var(--gray-100); border: 2px solid #E5E7EB; color: var(--black); padding: 0.4rem 0.8rem; border-radius: 8px; cursor: pointer; font-size: 1.1rem; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+    .icon-btn:hover { border-color: var(--black); background: white; }
+    
+    /* Status Box */
+    .status { text-align: center; padding: 1rem; margin: 1rem 0; border-radius: 8px; display: none; font-weight: 700; }
+    .status.info { display: block; background: #DBEAFE; color: #1E40AF; border: 2px solid #93C5FD; }
+    .status.success { display: block; background: #D1FAE5; color: var(--green); border: 2px solid var(--green); }
+    .status.error { display: block; background: #FEE2E2; color: var(--red); border: 2px solid var(--red); }
+    
     audio { width: 100%; margin-bottom: 1rem; }
-    .submit-btn { width: 100%; padding: 1rem; background: #059669; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; }
-    .back-btn { display: inline-block; margin-bottom: 1rem; color: #60a5fa; text-decoration: none; cursor: pointer; }
+    
+    /* Submit Button */
+    .submit-btn { width: 100%; padding: 1rem; background: var(--yellow); color: var(--black); border: 2px solid var(--black); border-radius: 8px; font-weight: 800; cursor: pointer; box-shadow: 4px 4px 0px 0px var(--black); transition: all 0.2s; font-size: 1rem; margin-top: 1rem; }
+    .submit-btn:hover { transform: translate(1px, 1px); box-shadow: 3px 3px 0px 0px var(--black); }
+    
+    @media (max-width: 600px) {
+      .directory-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <a href="index.html" class="back">← Back to Home</a>
 
-    <div id="directory-view">
-      <h1>Institution Directory</h1>
-      <p class="subtitle">Select an organization to open their voice form.</p>
-      <div class="directory-grid" id="org-list"></div>
-    </div>
+  <!-- Top Nav -->
+  <header class="navbar">
+    <a href="index.html" class="logo">
+      Transcribe<span>'</span>Her
+    </a>
+  </header>
 
-    <div id="form-view" style="display: none;">
-      <a class="back-btn" onclick="backToDirectory()">← Back to Directory</a>
-      <h1 id="org-title"></h1>
-      <p class="subtitle">Voice Application</p>
-      
-      <div id="status" class="status"></div>
-      <audio id="player" controls hidden></audio>
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="container">
+      <a href="index.html" class="back">← Back to Home</a>
 
-      <div class="form-card" style="display: block;" id="dynamic-form-container">
-        <!-- Dynamic questions will be injected here -->
-        <button class="submit-btn" onclick="alert('Application Submitted!')">Submit Application</button>
+      <!-- Directory View -->
+      <div id="directory-view">
+        <h1>Institution Directory</h1>
+        <p class="subtitle">Select an organization to open their voice form.</p>
+        <div class="directory-grid" id="org-list"></div>
+      </div>
+
+      <!-- Form View -->
+      <div id="form-view" style="display: none;">
+        <a class="back" onclick="backToDirectory()" style="cursor: pointer;">← Back to Directory</a>
+        <h1 id="org-title"></h1>
+        <p class="subtitle">Voice Application</p>
+        
+        <div id="status" class="status"></div>
+        <audio id="player" controls hidden></audio>
+
+        <div class="form-card" style="display: block;" id="dynamic-form-container">
+          <!-- Dynamic questions will be injected here -->
+        </div>
       </div>
     </div>
   </div>
@@ -89,7 +142,7 @@
       });
 
       if (count === 0) {
-        list.innerHTML = "<p style='grid-column: 1/-1; text-align: center; color: #94a3b8;'>No institutions registered yet.</p>";
+        list.innerHTML = "<p style='grid-column: 1/-1; text-align: center; color: #6B7280; padding: 2rem;'>No institutions registered yet. Go to the Form Builder to create one.</p>";
       }
     }
 
@@ -99,16 +152,15 @@
       document.getElementById('org-title').textContent = org.name;
       
       const container = document.getElementById('dynamic-form-container');
-      container.innerHTML = ""; // Clear old fields
+      container.innerHTML = ""; 
 
-      // Build the form dynamically based on the questions array
       org.questions.forEach((questionText, index) => {
         const fieldDiv = document.createElement('div');
         fieldDiv.className = 'field';
         fieldDiv.innerHTML = `
           <div class="label">
             <span>${questionText}</span>
-            <span>
+            <span class="btn-group">
               <button class="icon-btn play-btn">🔊</button>
               <button class="icon-btn mic-btn" id="mic-${index}">🎤</button>
             </span>
@@ -117,7 +169,6 @@
         `;
         container.appendChild(fieldDiv);
         
-        // Wire up the play and mic buttons for this specific field
         const playBtn = fieldDiv.querySelector('.play-btn');
         const micBtn = fieldDiv.querySelector('.mic-btn');
         const input = fieldDiv.querySelector('input');
@@ -131,7 +182,6 @@
         micBtn.onclick = () => handleMic(micBtn, input);
       });
 
-      // Add submit button back at the bottom
       const submitBtn = document.createElement('button');
       submitBtn.className = 'submit-btn';
       submitBtn.textContent = 'Submit Application';
