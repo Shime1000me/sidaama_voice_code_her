@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Institution Directory</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     body { font-family: sans-serif; background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); color: white; min-height: 100vh; padding: 2rem 1rem; }
     .container { max-width: 800px; margin: 0 auto; }
@@ -10,14 +11,12 @@
     h1 { text-align: center; margin-bottom: 0.5rem; }
     .subtitle { text-align: center; color: #94a3b8; margin-bottom: 2rem; }
     
-    /* Directory Styles */
     .directory-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
     .org-card { background: #1e293b; padding: 1.5rem; border-radius: 12px; border: 1px solid #334155; cursor: pointer; transition: 0.2s; text-align: center; }
     .org-card:hover { border-color: #60a5fa; transform: translateY(-2px); }
     .org-card h3 { color: #60a5fa; margin-bottom: 0.5rem; }
     .org-card p { color: #94a3b8; font-size: 0.9rem; }
 
-    /* Form Styles */
     .form-card { background: rgba(30, 41, 59, 0.85); padding: 2rem; border-radius: 16px; border: 1px solid #334155; display: none; }
     .field { margin-bottom: 1.5rem; }
     .label { font-weight: bold; margin-bottom: 0.5rem; display: flex; justify-content: space-between; }
@@ -35,17 +34,13 @@
   <div class="container">
     <a href="index.html" class="back">← Back to Home</a>
 
-    <!-- DIRECTORY VIEW -->
     <div id="directory-view">
       <h1>Institution Directory</h1>
       <p class="subtitle">Select an organization to open their voice form.</p>
-      <div class="directory-grid" id="org-list">
-        <!-- Cards injected by JS -->
-      </div>
+      <div class="directory-grid" id="org-list"></div>
     </div>
 
-    <!-- FORM VIEW (Hidden by default) -->
-    <div id="form-view">
+    <div id="form-view" style="display: none;">
       <a class="back-btn" onclick="backToDirectory()">← Back to Directory</a>
       <h1 id="org-title"></h1>
       <p class="subtitle">Voice Application</p>
@@ -53,7 +48,7 @@
       <div id="status" class="status"></div>
       <audio id="player" controls hidden></audio>
 
-      <div class="form-card" id="form-content" style="display: block;">
+      <div class="form-card" style="display: block;">
         <div class="field">
           <div class="label"><span id="q1-label"></span><span><button class="icon-btn" id="play1">🔊</button> <button class="icon-btn" id="mic1">🎤</button></span></div>
           <input type="text" id="ans1" />
@@ -68,6 +63,10 @@
   </div>
 
   <script>
+    const SUPABASE_URL = "https://dhcojcnwjcyrcymgqhme.supabase.co";
+    const SUPABASE_KEY = "sb_secret_oiy7bGZM9K5giduxLxLj8Q_uwxphX8-"; 
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
     // --- HAYYO VOICE API SETUP ---
     const BASE = "https://hayyoai1000me-sidaama-voice-code-her.hf.space";
     const API = BASE + "/gradio_api";
@@ -79,44 +78,42 @@
     let currentQ2 = "";
 
     function showStatus(msg, type) { statusEl.className = 'status ' + type; statusEl.textContent = msg; }
-
     async function request(step, url, options = {}) { let res = await fetch(url, options); if (!res.ok) throw new Error(`${step} Error`); return res; }
     function parseResult(s) { let ev=''; for(const l of s.split(/\r?\n/)){ if(l.startsWith('event:')) ev=l.slice(6).trim(); else if(l.startsWith('data:')){ if(ev==='complete') return JSON.parse(l.slice(5).trim()); } } throw new Error('Failed'); }
     async function callApi(name, data) { const st = await request('Start', `${API}/call/${name}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({data}) }); const {event_id} = await st.json(); const rs = await request('Result', `${API}/call/${name}/${event_id}`); return parseResult(await rs.text()); }
     async function uploadFile(file) { const f = new FormData(); f.append('files', file); const res = await request('Upload', `${API}/upload`, { method: 'POST', body: f }); const [path] = await res.json(); return { path, orig_name: file.name, meta: { _type: 'gradio.FileData' } }; }
     function hexToBlob(hex) { const bytes = new Uint8Array(hex.length / 2); for (let i = 0; i < hex.length; i += 2) bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16); return new Blob([bytes], { type: 'audio/wav' }); }
-    
-    async function textToSpeech(text) {
-      if (!ttsCache.has(text)) { const [hex] = await callApi('speak', [text]); ttsCache.set(text, URL.createObjectURL(hexToBlob(hex))); }
-      return ttsCache.get(text);
-    }
+    async function textToSpeech(text) { if (!ttsCache.has(text)) { const [hex] = await callApi('speak', [text]); ttsCache.set(text, URL.createObjectURL(hexToBlob(hex))); } return ttsCache.get(text); }
     async function speechToText(file) { const fd = await uploadFile(file); const [txt] = await callApi('transcribe', [fd]); return txt; }
 
-    // --- LOAD DIRECTORY ---
-    function loadDirectory() {
-      const orgs = JSON.parse(localStorage.getItem('hayyo_all_orgs')) || [];
-      const list = document.getElementById('org-list');
+    // --- LOAD DIRECTORY FROM DATABASE ---
+    async function loadDirectory() {
+      const { data, error } = await supabaseClient.from('organizations').select('*');
       
-      if (orgs.length === 0) {
-        list.innerHTML = "<p style='grid-column: 1/-1; text-align: center; color: #94a3b8;'>No institutions found. Go to Form Builder to create one.</p>";
+      const list = document.getElementById('org-list');
+      list.innerHTML = "";
+
+      if (error || !data || data.length === 0) {
+        list.innerHTML = "<p style='grid-column: 1/-1; text-align: center; color: #94a3b8;'>No institutions registered yet.</p>";
         return;
       }
 
-      orgs.forEach((org, index) => {
-        const card = document.createElement('div');
-        card.className = 'org-card';
-        card.innerHTML = `<h3>${org.name}</h3><p>Click to open form</p>`;
-        card.onclick = () => openForm(org);
-        list.appendChild(card);
+      data.forEach(org => {
+        // Only show them if they have created the questions
+        if (org.q1) {
+          const card = document.createElement('div');
+          card.className = 'org-card';
+          card.innerHTML = `<h3>${org.org_name}</h3><p>Click to open form</p>`;
+          card.onclick = () => openForm(org);
+          list.appendChild(card);
+        }
       });
     }
 
-    // --- OPEN SPECIFIC FORM ---
     function openForm(org) {
       document.getElementById('directory-view').style.display = 'none';
       document.getElementById('form-view').style.display = 'block';
-      
-      document.getElementById('org-title').textContent = org.name;
+      document.getElementById('org-title').textContent = org.org_name;
       document.getElementById('q1-label').textContent = org.q1;
       document.getElementById('q2-label').textContent = org.q2;
       currentQ1 = org.q1;
@@ -128,14 +125,12 @@
       document.getElementById('form-view').style.display = 'none';
     }
 
-    // --- WIRE UP BUTTONS ONCE ---
     document.getElementById('play1').onclick = async () => { showStatus('⏳ Loading Audio...','info'); player.src = await textToSpeech(currentQ1); player.hidden=false; player.play(); statusEl.className='status'; };
     document.getElementById('play2').onclick = async () => { showStatus('⏳ Loading Audio...','info'); player.src = await textToSpeech(currentQ2); player.hidden=false; player.play(); statusEl.className='status'; };
 
     document.getElementById('mic1').onclick = () => handleMic(document.getElementById('mic1'), document.getElementById('ans1'));
     document.getElementById('mic2').onclick = () => handleMic(document.getElementById('mic2'), document.getElementById('ans2'));
 
-    // --- MICROPHONE LOGIC ---
     async function handleMic(btn, input) {
       if (activeRecorder && activeRecorder.state === 'recording') { activeRecorder.stop(); return; }
       try {
