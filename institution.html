@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Institution Directory</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     body { font-family: sans-serif; background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); color: white; min-height: 100vh; padding: 2rem 1rem; }
     .container { max-width: 800px; margin: 0 auto; }
@@ -62,7 +63,10 @@
   </div>
 
   <script>
-    // --- HAYYO VOICE API SETUP ---
+    const SUPABASE_URL = "https://dhcojcnwjcyrcymgqhme.supabase.co";
+    const SUPABASE_KEY = "sb_secret_oiy7bGZM9K5giduxLxLj8Q_uwxphX8-"; 
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
     const BASE = "https://hayyoai1000me-sidaama-voice-code-her.hf.space";
     const API = BASE + "/gradio_api";
     const player = document.getElementById('player');
@@ -81,33 +85,35 @@
     async function textToSpeech(text) { if (!ttsCache.has(text)) { const [hex] = await callApi('speak', [text]); ttsCache.set(text, URL.createObjectURL(hexToBlob(hex))); } return ttsCache.get(text); }
     async function speechToText(file) { const fd = await uploadFile(file); const [txt] = await callApi('transcribe', [fd]); return txt; }
 
-    // --- LOAD DIRECTORY FROM LOCALSTORAGE ---
-    function loadDirectory() {
-      const orgName = localStorage.getItem('hayyo_org_name');
-      const q1 = localStorage.getItem('hayyo_q1');
-      
+    async function loadDirectory() {
+      const { data, error } = await supabaseClient.from('organizations').select('*');
       const list = document.getElementById('org-list');
       list.innerHTML = "";
 
-      if (orgName && q1) {
-        const card = document.createElement('div');
-        card.className = 'org-card';
-        card.innerHTML = `<h3>${orgName}</h3><p>Click to open form</p>`;
-        card.onclick = () => openForm(orgName, q1, localStorage.getItem('hayyo_q2'));
-        list.appendChild(card);
-      } else {
+      if (error || !data || data.length === 0) {
         list.innerHTML = "<p style='grid-column: 1/-1; text-align: center; color: #94a3b8;'>No institutions registered yet.</p>";
+        return;
       }
+
+      data.forEach(org => {
+        if (org.q1) {
+          const card = document.createElement('div');
+          card.className = 'org-card';
+          card.innerHTML = `<h3>${org.org_name}</h3><p>Click to open form</p>`;
+          card.onclick = () => openForm(org);
+          list.appendChild(card);
+        }
+      });
     }
 
-    function openForm(name, q1, q2) {
+    function openForm(org) {
       document.getElementById('directory-view').style.display = 'none';
       document.getElementById('form-view').style.display = 'block';
-      document.getElementById('org-title').textContent = name;
-      document.getElementById('q1-label').textContent = q1;
-      document.getElementById('q2-label').textContent = q2;
-      currentQ1 = q1;
-      currentQ2 = q2;
+      document.getElementById('org-title').textContent = org.org_name;
+      document.getElementById('q1-label').textContent = org.q1;
+      document.getElementById('q2-label').textContent = org.q2;
+      currentQ1 = org.q1;
+      currentQ2 = org.q2;
     }
 
     function backToDirectory() {
