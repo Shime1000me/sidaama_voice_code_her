@@ -2,38 +2,47 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Hayyo Voice — Home</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); color: #e2e8f0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    body { font-family: -apple-system, sans-serif; background: #0f172a; color: white; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem; }
     .container { max-width: 800px; width: 100%; text-align: center; }
     h1 { font-size: 3rem; margin-bottom: 1rem; }
     .subtitle { color: #94a3b8; font-size: 1.2rem; margin-bottom: 3rem; }
-    .options { display: flex; gap: 2rem; justify-content: center; }
-    .option-card { background: rgba(30, 41, 59, 0.85); border: 1px solid #334155; border-radius: 16px; padding: 3rem 2rem; flex: 1; text-decoration: none; color: inherit; transition: transform 0.2s, border-color 0.2s; }
+    .options { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .option-card { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 2rem; text-decoration: none; color: inherit; transition: 0.2s; display: flex; flex-direction: column; align-items: center; }
     .option-card:hover { transform: translateY(-5px); border-color: #60a5fa; }
-    .option-card h2 { font-size: 1.5rem; margin-bottom: 1rem; color: #60a5fa; }
-    .option-card p { color: #94a3b8; line-height: 1.5; }
-    .icon { font-size: 3rem; margin-bottom: 1rem; display: block; }
+    .option-card h2 { font-size: 1.2rem; margin-bottom: 0.5rem; color: #60a5fa; }
+    .option-card p { color: #94a3b8; font-size: 0.9rem; text-align: center; }
+    .icon { font-size: 2.5rem; margin-bottom: 1rem; }
+    @media (max-width: 600px) { .options { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>🇪🇹 Hayyo Voice</h1>
-    <p class="subtitle">The Voice API for Ethiopian Languages. No reading required.</p>
+    <p class="subtitle">The Voice API for Ethiopian Languages</p>
     
     <div class="options">
-      <a href="user.html" class="option-card">
-        <span class="icon">🎙️</span>
-        <h2>I am an Individual</h2>
-        <p>Test the AI. Generate voice from text or transcribe your own recordings instantly.</p>
-      </a>
-      
       <a href="org.html" class="option-card">
         <span class="icon">🏢</span>
-        <h2>I am an Organization</h2>
-        <p>Access the Enterprise Dashboard. Generate API keys and create voice forms for your customers.</p>
+        <h2>Enterprise Portal</h2>
+        <p>Generate API keys for your organization.</p>
+      </a>
+      <a href="createorg.html" class="option-card">
+        <span class="icon">🛠️</span>
+        <h2>Form Builder</h2>
+        <p>Use your API key to build a custom voice form.</p>
+      </a>
+      <a href="institution.html" class="option-card">
+        <span class="icon">📱</span>
+        <h2>Institution View</h2>
+        <p>See the live form the end-user interacts with.</p>
+      </a>
+      <a href="user.html" class="option-card">
+        <span class="icon">🎙️</span>
+        <h2>User Playground</h2>
+        <p>Test the raw Text-to-Speech and Speech-to-Text API.</p>
       </a>
     </div>
   </div>
