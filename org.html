@@ -53,7 +53,6 @@
       document.getElementById('gen-btn').textContent = "Generating...";
       const newKey = "sk_live_" + Math.random().toString(36).substring(2, 10);
       
-      // Save to database
       const { error } = await supabaseClient.from('organizations').insert([{ api_key: newKey, org_name: name }]);
       
       if (error) {
