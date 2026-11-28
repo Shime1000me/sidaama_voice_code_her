@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hayyo Voice — Enterprise Dashboard</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; display: flex; min-height: 100vh; }
+    .sidebar { width: 250px; background: #1e293b; padding: 2rem 1rem; border-right: 1px solid #334155; }
+    .sidebar h2 { font-size: 1.2rem; margin-bottom: 2rem; color: #60a5fa; }
+    .nav-item { padding: 0.75rem 1rem; margin-bottom: 0.5rem; border-radius: 8px; cursor: pointer; color: #94a3b8; }
+    .nav-item.active { background: #2563eb; color: white; }
+    .main { flex: 1; padding: 3rem; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+    .btn { padding: 0.75rem 1.5rem; background: #059669; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
+    .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 2rem; margin-bottom: 2rem; }
+    .api-key { background: #0f172a; padding: 1rem; border: 1px dashed #475569; border-radius: 8px; font-family: monospace; display: flex; justify-content: space-between; align-items: center; }
+    .copy-btn { background: #475569; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <h2>Hayyo Enterprise</h2>
+    <div class="nav-item active">Dashboard</div>
+    <div class="nav-item">Forms</div>
+    <div class="nav-item">API Keys</div>
+    <div class="nav-item">Settings</div>
+  </div>
+  <div class="main">
+    <div class="header">
+      <h1>Welcome, Hawassa Microfinance</h1>
+      <button class="btn" onclick="alert('Form builder would open here!')">+ Create New Form</button>
+    </div>
+    <div class="card">
+      <h2>Your API Key</h2>
+      <p style="color: #94a3b8; margin-bottom: 1rem;">Use this key to integrate Hayyo Voice into your mobile app.</p>
+      <div class="api-key">
+        <span>sk_live_hayyo_2026_xyz123</span>
+        <button class="copy-btn" onclick="alert('API Key Copied!')">Copy</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Recent Forms Created</h2>
+      <table style="width: 100%; text-align: left; border-collapse: collapse;">
+        <tr style="border-bottom: 1px solid #334155; color: #94a3b8;">
+          <th style="padding: 1rem 0;">Form Name</th><th>Submissions</th><th>Status</th>
+        </tr>
+        <tr style="border-bottom: 1px solid #334155;">
+          <td style="padding: 1rem 0;">Micro-Loan Application</td><td>142</td><td><span style="color: #10b981;">● Active</span></td>
+        </tr>
+        <tr>
+          <td style="padding: 1rem 0;">Agricultural Survey</td><td>89</td><td><span style="color: #10b981;">● Active</span></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</body>
+</html>
