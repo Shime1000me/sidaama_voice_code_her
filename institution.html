@@ -67,7 +67,6 @@
     const SUPABASE_KEY = "sb_secret_oiy7bGZM9K5giduxLxLj8Q_uwxphX8-"; 
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // --- HAYYO VOICE API SETUP ---
     const BASE = "https://hayyoai1000me-sidaama-voice-code-her.hf.space";
     const API = BASE + "/gradio_api";
     const player = document.getElementById('player');
@@ -86,10 +85,8 @@
     async function textToSpeech(text) { if (!ttsCache.has(text)) { const [hex] = await callApi('speak', [text]); ttsCache.set(text, URL.createObjectURL(hexToBlob(hex))); } return ttsCache.get(text); }
     async function speechToText(file) { const fd = await uploadFile(file); const [txt] = await callApi('transcribe', [fd]); return txt; }
 
-    // --- LOAD DIRECTORY FROM DATABASE ---
     async function loadDirectory() {
       const { data, error } = await supabaseClient.from('organizations').select('*');
-      
       const list = document.getElementById('org-list');
       list.innerHTML = "";
 
@@ -99,7 +96,6 @@
       }
 
       data.forEach(org => {
-        // Only show them if they have created the questions
         if (org.q1) {
           const card = document.createElement('div');
           card.className = 'org-card';
@@ -146,7 +142,6 @@
       } catch (e) { showStatus('❌ Mic Denied', 'error'); }
     }
 
-    // Start
     loadDirectory();
   </script>
 </body>
