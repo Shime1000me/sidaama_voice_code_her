@@ -3,20 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <title>Institution Directory</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     body { font-family: sans-serif; background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); color: white; min-height: 100vh; padding: 2rem 1rem; }
     .container { max-width: 800px; margin: 0 auto; }
     .back { color: #60a5fa; text-decoration: none; display: inline-block; margin-bottom: 1rem; }
     h1 { text-align: center; margin-bottom: 0.5rem; }
     .subtitle { text-align: center; color: #94a3b8; margin-bottom: 2rem; }
-    
     .directory-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
     .org-card { background: #1e293b; padding: 1.5rem; border-radius: 12px; border: 1px solid #334155; cursor: pointer; transition: 0.2s; text-align: center; }
     .org-card:hover { border-color: #60a5fa; transform: translateY(-2px); }
     .org-card h3 { color: #60a5fa; margin-bottom: 0.5rem; }
     .org-card p { color: #94a3b8; font-size: 0.9rem; }
-
     .form-card { background: rgba(30, 41, 59, 0.85); padding: 2rem; border-radius: 16px; border: 1px solid #334155; display: none; }
     .field { margin-bottom: 1.5rem; }
     .label { font-weight: bold; margin-bottom: 0.5rem; display: flex; justify-content: space-between; }
@@ -44,7 +41,6 @@
       <a class="back-btn" onclick="backToDirectory()">← Back to Directory</a>
       <h1 id="org-title"></h1>
       <p class="subtitle">Voice Application</p>
-      
       <div id="status" class="status"></div>
       <audio id="player" controls hidden></audio>
 
@@ -63,10 +59,6 @@
   </div>
 
   <script>
-    const SUPABASE_URL = "https://dhcojcnwjcyrcymgqhme.supabase.co";
-    const SUPABASE_KEY = "sb_secret_oiy7bGZM9K5giduxLxLj8Q_uwxphX8-"; 
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
     const BASE = "https://hayyoai1000me-sidaama-voice-code-her.hf.space";
     const API = BASE + "/gradio_api";
     const player = document.getElementById('player');
@@ -85,31 +77,32 @@
     async function textToSpeech(text) { if (!ttsCache.has(text)) { const [hex] = await callApi('speak', [text]); ttsCache.set(text, URL.createObjectURL(hexToBlob(hex))); } return ttsCache.get(text); }
     async function speechToText(file) { const fd = await uploadFile(file); const [txt] = await callApi('transcribe', [fd]); return txt; }
 
-    async function loadDirectory() {
-      const { data, error } = await supabaseClient.from('organizations').select('*');
+    function loadDirectory() {
+      let orgs = JSON.parse(localStorage.getItem('hayyo_orgs')) || [];
       const list = document.getElementById('org-list');
       list.innerHTML = "";
-
-      if (error || !data || data.length === 0) {
-        list.innerHTML = "<p style='grid-column: 1/-1; text-align: center; color: #94a3b8;'>No institutions registered yet.</p>";
-        return;
-      }
-
-      data.forEach(org => {
+      let count = 0;
+      
+      orgs.forEach(org => {
         if (org.q1) {
+          count++;
           const card = document.createElement('div');
           card.className = 'org-card';
-          card.innerHTML = `<h3>${org.org_name}</h3><p>Click to open form</p>`;
+          card.innerHTML = `<h3>${org.name}</h3><p>Click to open form</p>`;
           card.onclick = () => openForm(org);
           list.appendChild(card);
         }
       });
+
+      if (count === 0) {
+        list.innerHTML = "<p style='grid-column: 1/-1; text-align: center; color: #94a3b8;'>No institutions registered yet.</p>";
+      }
     }
 
     function openForm(org) {
       document.getElementById('directory-view').style.display = 'none';
       document.getElementById('form-view').style.display = 'block';
-      document.getElementById('org-title').textContent = org.org_name;
+      document.getElementById('org-title').textContent = org.name;
       document.getElementById('q1-label').textContent = org.q1;
       document.getElementById('q2-label').textContent = org.q2;
       currentQ1 = org.q1;
