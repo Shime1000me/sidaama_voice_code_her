@@ -50,7 +50,7 @@
       setTimeout(() => {
         const newKey = "sk_live_" + Math.random().toString(36).substring(2, 10);
         
-        // Save to browser memory (100% reliable)
+        // Save to browser memory instantly
         localStorage.setItem('hayyo_api_key', newKey);
         localStorage.setItem('hayyo_org_name', name);
         
