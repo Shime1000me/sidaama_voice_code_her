@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>Form Builder</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     body { font-family: sans-serif; background: #0f172a; color: white; padding: 3rem; }
     .container { max-width: 600px; margin: 0 auto; }
@@ -40,28 +39,23 @@
   </div>
 
   <script>
-    const SUPABASE_URL = "https://dhcojcnwjcyrcymgqhme.supabase.co";
-    const SUPABASE_KEY = "sb_secret_oiy7bGZM9K5giduxLxLj8Q_uwxphX8-"; 
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    async function saveForm() {
+    function saveForm() {
       const key = document.getElementById('api_key').value;
       const q1 = document.getElementById('q1').value;
       const q2 = document.getElementById('q2').value;
 
-      if(!key) return alert("Please enter your API Key");
-
-      const { data, error } = await supabaseClient
-        .from('organizations')
-        .update({ q1: q1, q2: q2 })
-        .eq('api_key', key)
-        .select();
-
-      if (error || data.length === 0) {
-        alert("Invalid API Key. Please check and try again.");
-      } else {
-        document.getElementById('success-msg').style.display = 'block';
+      let orgs = JSON.parse(localStorage.getItem('hayyo_orgs')) || [];
+      const orgIndex = orgs.findIndex(o => o.key === key);
+      
+      if (orgIndex === -1) {
+        return alert("Invalid API Key. Please check and try again.");
       }
+
+      orgs[orgIndex].q1 = q1;
+      orgs[orgIndex].q2 = q2;
+      localStorage.setItem('hayyo_orgs', JSON.stringify(orgs));
+
+      document.getElementById('success-msg').style.display = 'block';
     }
   </script>
 </body>
