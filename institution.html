@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Institution View</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { font-family: sans-serif; background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); color: white; min-height: 100vh; padding: 2rem 1rem; }
+    .container { max-width: 600px; margin: 0 auto; }
+    .back { color: #60a5fa; text-decoration: none; display: inline-block; margin-bottom: 1rem; }
+    h1 { text-align: center; margin-bottom: 0.5rem; }
+    .subtitle { text-align: center; color: #94a3b8; margin-bottom: 2rem; }
+    .form-card { background: rgba(30, 41, 59, 0.85); padding: 2rem; border-radius: 16px; border: 1px solid #334155; }
+    .field { margin-bottom: 1.5rem; }
+    .label { font-weight: bold; margin-bottom: 0.5rem; display: flex; justify-content: space-between; }
+    input { width: 100%; padding: 0.75rem; background: #0f172a; border: 1px solid #475569; color: white; border-radius: 8px; }
+    .icon-btn { background: #1e293b; border: 1px solid #475569; color: white; padding: 0.5rem; border-radius: 8px; cursor: pointer; }
+    .status { text-align: center; padding: 1rem; margin: 1rem 0; border-radius: 8px; display: none; }
+    .status.info { display: block; background: #1e3a8a; }
+    .status.success { display: block; background: #14532d; }
+    audio { width: 100%; margin-bottom: 1rem; }
+    .submit-btn { width: 100%; padding: 1rem; background: #059669; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="index.html" class="back">← Back to Home</a>
+    <h1 id="org-title">Loading...</h1>
+    <p class="subtitle">Voice Application</p>
+    
+    <div id="status" class="status"></div>
+    <audio id="player" controls hidden></audio>
+
+    <div class="form-card" id="form-content" style="display: none;">
+      <div class="field">
+        <div class="label"><span id="q1-label"></span><span><button class="icon-btn" id="play1">🔊</button> <button class="icon-btn" id="mic1">🎤</button></span></div>
+        <input type="text" id="ans1" />
+      </div>
+      <div class="field">
+        <div class="label"><span id="q2-label"></span><span><button class="icon-btn" id="play2">🔊</button> <button class="icon-btn" id="mic2">🎤</button></span></div>
+        <input type="text" id="ans2" />
+      </div>
+      <button class="submit-btn" onclick="alert('Application Submitted!')">Submit Application</button>
+    </div>
+  </div>
+
+  <script>
+    // --- SUPABASE SETUP ---
+    const SUPABASE_URL = "https://dhcojcnwjcyrcymgqhme.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_ve3P0-iuAiLl78Ra_AWjEw__b7wSNG8";
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // --- HAYYO VOICE API SETUP (The code that worked!) ---
+    const BASE = "https://hayyoai1000me-sidaama-voice-code-her.hf.space";
+    const API = BASE + "/gradio_api";
+    const player = document.getElementById('player');
+    const statusEl = document.getElementById('status');
+    const ttsCache = new Map();
+    let activeRecorder = null;
+
+    function showStatus(msg, type) { statusEl.className = 'status ' + type; statusEl.textContent = msg; }
+
+    async function request(step, url, options = {}) { let res = await fetch(url, options); if (!res.ok) throw new Error(`${step} Error`); return res; }
+    function parseResult(s) { let ev=''; for(const l of s.split(/\r?\n/)){ if(l.startsWith('event:')) ev=l.slice(6).trim(); else if(l.startsWith('data:')){ if(ev==='complete') return JSON.parse(l.slice(5).trim()); } } throw new Error('Failed'); }
+    async function callApi(name, data) { const st = await request('Start', `${API}/call/${name}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({data}) }); const {event_id} = await st.json(); const rs = await request('Result', `${API}/call/${name}/${event_id}`); return parseResult(await rs.text()); }
+    async function uploadFile(file) { const f = new FormData(); f.append('files', file); const res = await request('Upload', `${API}/upload`, { method: 'POST', body: f }); const [path] = await res.json(); return { path, orig_name: file.name, meta: { _type: 'gradio.FileData' } }; }
+    function hexToBlob(hex) { const bytes = new Uint8Array(hex.length / 2); for (let i = 0; i < hex.length; i += 2) bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16); return new Blob([bytes], { type: 'audio/wav' }); }
+    
+    async function textToSpeech(text) {
+      if (!ttsCache.has(text)) { const [hex] = await callApi('speak', [text]); ttsCache.set(text, URL.createObjectURL(hexToBlob(hex))); }
+      return ttsCache.get(text);
+    }
+    async function speechToText(file) { const fd = await uploadFile(file); const [txt] = await callApi('transcribe', [fd]); return txt; }
+
+    // --- LOAD FORM FROM DATABASE ---
+    async function loadForm() {
+      const { data, error } = await supabaseClient.from('organizations').select('*').not('org_name', 'is', null).limit(1).single();
+      if (data) {
+        document.getElementById('org-title').textContent = data.org_name;
+        document.getElementById('q1-label').textContent = data.q1;
+        document.getElementById('q2-label').textContent = data.q2;
+        document.getElementById('form-content').style.display = 'block';
+        
+        // Wire up Play Buttons
+        document.getElementById('play1').onclick = async () => { showStatus('⏳ Loading Audio...','info'); player.src = await textToSpeech(data.q1); player.hidden=false; player.play(); hideStatus(); };
+        document.getElementById('play2').onclick = async () => { showStatus('⏳ Loading Audio...','info'); player.src = await textToSpeech(data.q2); player.hidden=false; player.play(); hideStatus(); };
+
+        // Wire up Mic Buttons
+        document.getElementById('mic1').onclick = () => handleMic(document.getElementById('mic1'), document.getElementById('ans1'));
+        document.getElementById('mic2').onclick = () => handleMic(document.getElementById('mic2'), document.getElementById('ans2'));
+      }
+    }
+
+    // --- MICROPHONE LOGIC ---
+    async function handleMic(btn, input) {
+      if (activeRecorder && activeRecorder.state === 'recording') { activeRecorder.stop(); return; }
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const recorder = new MediaRecorder(stream); const chunks = []; activeRecorder = recorder;
+        recorder.ondataavailable = e => chunks.push(e.data);
+        recorder.onstop = async () => {
+          btn.style.background = ''; stream.getTracks().forEach(t => t.stop()); showStatus('⏳ Transcribing...','info');
+          const file = new File(chunks, `rec.webm`, { type: 'audio/webm' });
+          try { input.value = await speechToText(file); showStatus('✅ Transcribed', 'success'); setTimeout(()=>statusEl.className='status',1500); } catch(e) { showStatus('❌ Error', 'error'); }
+        };
+        recorder.start(); btn.style.background = '#dc2626'; showStatus('🔴 Recording...', 'info');
+      } catch (e) { showStatus('❌ Mic Denied', 'error'); }
+    }
+
+    loadForm();
+  </script>
+</body>
+</html>
