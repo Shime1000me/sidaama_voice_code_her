@@ -77,7 +77,7 @@
     .demo-card:hover { transform: translateY(-4px); box-shadow: 4px 8px 0px 0px rgba(0,0,0,0.2); border-color: var(--yellow-dark); }
     .demo-card h3 { font-size: 1.1rem; font-weight: 800; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
     .demo-card p { font-size: 0.9rem; color: var(--gray-500); }
-    .demo-number { background: var(--yellow); color: var(--black); width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800; }
+    .demo-number { background: var(--yellow); color: var(--black); width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800; flex-shrink: 0; }
 
     /* Toast */
     .toast { position: fixed; bottom: 2rem; right: 2rem; background: var(--black); color: white; padding: 1rem 1.5rem; border-radius: 8px; border: 1px solid var(--gray-800); display: flex; align-items: center; gap: 0.75rem; font-size: 0.9rem; font-weight: 600; transform: translateY(100px); opacity: 0; transition: all 0.3s; z-index: 100; }
@@ -109,21 +109,21 @@
       <div class="badge" style="margin-bottom: 1rem; display: inline-block;">API-First Accessibility Engine</div>
       
       <h1>
-        Forms with <br>
-        <span class="highlight">Integrated</span><br>
-        <span class="highlight">Transcription.</span>
+        Voice Forms for <br>
+        <span class="highlight">Unbanked</span><br>
+        <span class="highlight">Communities.</span>
       </h1>
       
       <p>
-        Configure dynamic forms in <strong>Sidaamu Afoo</strong> and <strong>Amharic</strong> with built-in two-way Voice-to-Text (STT) and Text-to-Speech (TTS). Deploy on-site or remotely and stream structured responses directly into your own database via a single REST API.
+        Transcribe'Her is the B2B voice infrastructure for <strong>Sidaamu Afoo</strong>. We allow microfinance banks and NGOs to build dynamic forms where users simply <strong>speak</strong> their answers instead of typing, eliminating the literacy barrier in rural Ethiopia.
       </p>
 
       <div class="btn-group">
-        <a href="org.html" class="btn-primary" onclick="showToast('Generating API Key...')">
+        <a href="org.html" class="btn-primary">
           <span>🔑</span> Get API Access
         </a>
         <a href="user.html" class="btn-secondary">
-          <span>💻</span> Explore API Docs
+          <span>💻</span> Test the API
         </a>
       </div>
 
@@ -132,8 +132,8 @@
         <div class="feature">
           <div class="feature-icon">🌍</div>
           <div class="feature-text">
-            <h4>Sidaamu & Amharic</h4>
-            <p>Scalable to more languages</p>
+            <h4>Sidaamu Afoo</h4>
+            <p>Native speech support</p>
           </div>
         </div>
         <div class="feature">
@@ -147,7 +147,7 @@
           <div class="feature-icon">🗄️</div>
           <div class="feature-text">
             <h4>Direct-to-DB API</h4>
-            <p>Zero third-party vaults</p>
+            <p>Instant form generation</p>
           </div>
         </div>
       </div>
@@ -160,7 +160,6 @@
       <div class="console-top">
         <div class="console-tabs">
           <button class="console-tab active">API Quickstart</button>
-          <button class="console-tab">Form Pipeline</button>
         </div>
         <div class="console-status">
           <span class="dot" style="display: inline-block; margin-right: 0.5rem;"></span> REST v1.0
@@ -183,27 +182,27 @@
           </div>
           <div class="json-body">
 {
-  "title": "Community Intake Form",
+  "organization": "Hawassa Microfinance",
   "language": "sid",
-  "deployment_mode": "in_place",
   "transcription": {
-    "stt_model": "badrex",
-    "tts_model": "facebook/mms-tts-sid",
-    "audio_privacy": "headphone_audio_opt_in"
+    "stt_model": "badrex/Ethio-ASR-sidaama",
+    "tts_model": "facebook/mms-tts-sid"
   },
   "fields": [
     {
-      "id": "respondent_name",
-      "prompt": "Su’makki maati?",
+      "prompt": "Su’makki borreessi?",
+      "input_modes": ["voice_stt", "text"]
+    },
+    {
+      "prompt": "Aganunni mageeshshi?",
       "input_modes": ["voice_stt", "text"]
     }
-  ],
-  "webhook_db_url": "https://db.your-org.et/api/intake"
+  ]
 }</div>
         </div>
 
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span style="color: var(--gray-500); font-size: 0.8rem;">Runs live schema validation</span>
+          <span style="color: var(--gray-500); font-size: 0.8rem;">Live schema validation</span>
           <button class="btn-primary" style="padding: 0.5rem 1rem; font-size: 0.9rem; box-shadow: none;" onclick="showToast('API Call Tested Successfully!')">
             ▶ Test API Call
           </button>
@@ -212,7 +211,7 @@
 
       <div class="console-footer">
         <span class="dot"></span>
-        API Online • Direct DB Streaming • Zero Data Lock-In
+        API Online • Dynamic Forms • Direct DB Streaming
       </div>
     </div>
 
@@ -227,13 +226,13 @@
       <!-- Button 1 -->
       <a href="org.html" class="demo-card">
         <h3><span class="demo-number">1</span> Enterprise Portal</h3>
-        <p>Where a bank or NGO registers their organization and generates a secure API key to access the Transcribe'Her engine.</p>
+        <p>Register your organization and generate a secure API key to access the Transcribe'Her engine.</p>
       </a>
       
       <!-- Button 2 -->
       <a href="createorg.html" class="demo-card">
         <h3><span class="demo-number">2</span> Form Builder</h3>
-        <p>The no-code dashboard where organizations dynamically add custom questions in Sidaamu Afoo and save them to our database.</p>
+        <p>The no-code dashboard where organizations dynamically add custom questions in Sidaamu Afoo and save them.</p>
       </a>
       
       <!-- Button 3 -->
