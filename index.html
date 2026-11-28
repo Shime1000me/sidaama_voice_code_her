@@ -2,49 +2,115 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Hayyo Voice — Home</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transcrib.her — Voice Infrastructure for Africa</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, sans-serif; background: #0f172a; color: white; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem; }
-    .container { max-width: 800px; width: 100%; text-align: center; }
-    h1 { font-size: 3rem; margin-bottom: 1rem; }
-    .subtitle { color: #94a3b8; font-size: 1.2rem; margin-bottom: 3rem; }
-    .options { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
-    .option-card { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 2rem; text-decoration: none; color: inherit; transition: 0.2s; display: flex; flex-direction: column; align-items: center; }
-    .option-card:hover { transform: translateY(-5px); border-color: #60a5fa; }
-    .option-card h2 { font-size: 1.2rem; margin-bottom: 0.5rem; color: #60a5fa; }
-    .option-card p { color: #94a3b8; font-size: 0.9rem; text-align: center; }
-    .icon { font-size: 2.5rem; margin-bottom: 1rem; }
-    @media (max-width: 600px) { .options { grid-template-columns: 1fr; } }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: white; line-height: 1.6; }
+    
+    /* Navigation */
+    .nav { padding: 1.5rem 2rem; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; }
+    .logo { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; }
+    .logo span { color: #60a5fa; }
+
+    /* Hero Section */
+    .hero { text-align: center; padding: 5rem 2rem 3rem; max-width: 800px; margin: 0 auto; }
+    .badge { background: rgba(96, 165, 250, 0.1); color: #60a5fa; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600; margin-bottom: 1.5rem; display: inline-block; }
+    .hero h1 { font-size: 3.5rem; line-height: 1.1; margin-bottom: 1.5rem; letter-spacing: -1px; }
+    .hero p { font-size: 1.2rem; color: #94a3b8; max-width: 600px; margin: 0 auto; }
+
+    /* Problem/Solution Section */
+    .pitch-section { background: #1e293b; padding: 4rem 2rem; border-top: 1px solid #334155; border-bottom: 1px solid #334155; }
+    .pitch-grid { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; }
+    .pitch-box h3 { font-size: 1.5rem; color: #60a5fa; margin-bottom: 1rem; }
+    .pitch-box p { color: #cbd5e1; }
+
+    /* Architecture / Demo Section */
+    .demo-section { padding: 5rem 2rem; text-align: center; max-width: 1000px; margin: 0 auto; }
+    .demo-section h2 { font-size: 2rem; margin-bottom: 1rem; }
+    .demo-section > p { color: #94a3b8; margin-bottom: 3rem; }
+    
+    .options { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; text-align: left; }
+    .option-card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 2rem; text-decoration: none; color: inherit; transition: 0.2s; display: flex; flex-direction: column; }
+    .option-card:hover { transform: translateY(-3px); border-color: #60a5fa; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3); }
+    .option-card h3 { font-size: 1.2rem; margin-bottom: 0.5rem; color: white; display: flex; align-items: center; gap: 0.5rem; }
+    .option-card p { color: #94a3b8; font-size: 0.9rem; }
+    .icon { font-size: 1.5rem; }
+
+    /* Footer */
+    .footer { text-align: center; padding: 3rem; color: #64748b; font-size: 0.9rem; border-top: 1px solid #334155; }
+
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 2.5rem; }
+      .pitch-grid, .options { grid-template-columns: 1fr; gap: 1.5rem; }
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>🇪🇹 Hayyo Voice</h1>
-    <p class="subtitle">The Voice API for Ethiopian Languages</p>
+
+  <!-- Top Nav -->
+  <div class="nav">
+    <div class="logo">Transcrib<span>.her</span></div>
+    <div style="font-size: 0.9rem; color: #94a3b8;">AU Hackathon 2026</div>
+  </div>
+
+  <!-- Hero Section -->
+  <div class="hero">
+    <div class="badge">B2B Voice Infrastructure</div>
+    <h1>Bridging the literacy gap through voice.</h1>
+    <p>Transcrib.her is the API infrastructure powering Sidaamu Afoo speech recognition and synthesis. We don't build the apps—we power the banks and NGOs that serve unbanked communities.</p>
+  </div>
+
+  <!-- Pitch Section -->
+  <div class="pitch-section">
+    <div class="pitch-grid">
+      <div class="pitch-box">
+        <h3>The Problem</h3>
+        <p>Millions of women in rural Ethiopia face a severe literacy barrier. They are highly knowledgeable but cannot read or write formal documents. This locks them out of microfinance, healthcare, and digital banking, often leading to shame at service counters.</p>
+      </div>
+      <div class="pitch-box">
+        <h3>Our Solution</h3>
+        <p>We built a voice-first AI engine for low-resource languages. Organizations use our API to let users <b>speak</b> their answers instead of typing. Our AI transcribes the voice and fills the forms automatically. No reading required.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive Demo Section -->
+  <div class="demo-section">
+    <h2>Platform Architecture</h2>
+    <p>We've built a complete B2B SaaS platform. Explore the live technical demonstration below.</p>
     
     <div class="options">
+      <!-- 1. Enterprise Portal -->
       <a href="org.html" class="option-card">
-        <span class="icon">🏢</span>
-        <h2>Enterprise Portal</h2>
-        <p>Generate API keys for your organization.</p>
+        <h3><span class="icon">🏢</span> 1. Enterprise Portal</h3>
+        <p>Where a bank or NGO registers their organization and generates a secure API key to access the Transcrib.her engine.</p>
       </a>
+      
+      <!-- 2. Form Builder -->
       <a href="createorg.html" class="option-card">
-        <span class="icon">🛠️</span>
-        <h2>Form Builder</h2>
-        <p>Use your API key to build a custom voice form.</p>
+        <h3><span class="icon">🛠️</span> 2. Form Builder (Admin)</h3>
+        <p>The no-code dashboard where organizations dynamically add custom questions in Sidaamu Afoo and save them to our database.</p>
       </a>
+      
+      <!-- 3. Institution View -->
       <a href="institution.html" class="option-card">
-        <span class="icon">📱</span>
-        <h2>Institution View</h2>
-        <p>See the live form the end-user interacts with.</p>
+        <h3><span class="icon">📱</span> 3. Institution View (Live)</h3>
+        <p>The end-user experience. This pulls the dynamic forms from our database. Users press "play" to hear the question and "speak" to fill it out.</p>
       </a>
+      
+      <!-- 4. User Playground -->
       <a href="user.html" class="option-card">
-        <span class="icon">🎙️</span>
-        <h2>User Playground</h2>
-        <p>Test the raw Text-to-Speech and Speech-to-Text API.</p>
+        <h3><span class="icon">🎙️</span> 4. Developer Playground</h3>
+        <p>A public sandbox where developers can test the raw Text-to-Speech and Speech-to-Text API endpoints for any use case.</p>
       </a>
     </div>
   </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    &copy; 2026 Transcrib.her. Built at the African Union Hackathon, Hawassa University.
+  </div>
+
 </body>
 </html>
