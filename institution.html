@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>Institution View</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     body { font-family: sans-serif; background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); color: white; min-height: 100vh; padding: 2rem 1rem; }
     .container { max-width: 600px; margin: 0 auto; }
@@ -45,11 +44,6 @@
   </div>
 
   <script>
-    // --- SUPABASE SETUP (UPDATED SECRET KEY) ---
-    const SUPABASE_URL = "https://dhcojcnwjcyrcymgqhme.supabase.co";
-    const SUPABASE_KEY = "sb_secret_oiy7bGZM9K5giduxLxLj8Q_uwxphX8-"; 
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
     // --- HAYYO VOICE API SETUP ---
     const BASE = "https://hayyoai1000me-sidaama-voice-code-her.hf.space";
     const API = BASE + "/gradio_api";
@@ -72,20 +66,26 @@
     }
     async function speechToText(file) { const fd = await uploadFile(file); const [txt] = await callApi('transcribe', [fd]); return txt; }
 
-    // --- LOAD FORM FROM DATABASE ---
-    async function loadForm() {
-      const { data, error } = await supabaseClient.from('organizations').select('*').not('org_name', 'is', null).limit(1).single();
-      if (data) {
-        document.getElementById('org-title').textContent = data.org_name;
-        document.getElementById('q1-label').textContent = data.q1;
-        document.getElementById('q2-label').textContent = data.q2;
+    // --- LOAD FORM FROM LOCAL STORAGE ---
+    function loadForm() {
+      const name = localStorage.getItem('hayyo_org_name');
+      const q1 = localStorage.getItem('hayyo_q1');
+      const q2 = localStorage.getItem('hayyo_q2');
+
+      if (name && q1 && q2) {
+        document.getElementById('org-title').textContent = name;
+        document.getElementById('q1-label').textContent = q1;
+        document.getElementById('q2-label').textContent = q2;
         document.getElementById('form-content').style.display = 'block';
         
-        document.getElementById('play1').onclick = async () => { showStatus('⏳ Loading Audio...','info'); player.src = await textToSpeech(data.q1); player.hidden=false; player.play(); statusEl.className='status'; };
-        document.getElementById('play2').onclick = async () => { showStatus('⏳ Loading Audio...','info'); player.src = await textToSpeech(data.q2); player.hidden=false; player.play(); statusEl.className='status'; };
+        document.getElementById('play1').onclick = async () => { showStatus('⏳ Loading Audio...','info'); player.src = await textToSpeech(q1); player.hidden=false; player.play(); statusEl.className='status'; };
+        document.getElementById('play2').onclick = async () => { showStatus('⏳ Loading Audio...','info'); player.src = await textToSpeech(q2); player.hidden=false; player.play(); statusEl.className='status'; };
 
         document.getElementById('mic1').onclick = () => handleMic(document.getElementById('mic1'), document.getElementById('ans1'));
         document.getElementById('mic2').onclick = () => handleMic(document.getElementById('mic2'), document.getElementById('ans2'));
+      } else {
+        document.getElementById('org-title').textContent = "No Form Found";
+        alert("Please create a form in the Form Builder first!");
       }
     }
 
