@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>Enterprise Portal</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     body { font-family: sans-serif; background: #0f172a; color: white; padding: 3rem; }
     .container { max-width: 600px; margin: 0 auto; }
@@ -42,29 +41,25 @@
   </div>
 
   <script>
-    const SUPABASE_URL = "https://dhcojcnwjcyrcymgqhme.supabase.co";
-    const SUPABASE_KEY = "sb_secret_oiy7bGZM9K5giduxLxLj8Q_uwxphX8-"; 
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    async function registerOrg() {
+    function registerOrg() {
       const name = document.getElementById('org_name').value;
       if (!name) return alert("Please enter an organization name.");
 
       document.getElementById('gen-btn').textContent = "Generating...";
-      const newKey = "sk_live_" + Math.random().toString(36).substring(2, 10);
       
-      const { error } = await supabaseClient.from('organizations').insert([{ api_key: newKey, org_name: name }]);
-      
-      if (error) {
-        alert("Database Error: " + error.message);
-        document.getElementById('gen-btn').textContent = "Generate API Key ($49/mo)";
-      } else {
+      setTimeout(() => {
+        const newKey = "sk_live_" + Math.random().toString(36).substring(2, 10);
+        
+        // Save to browser memory (100% reliable)
+        localStorage.setItem('hayyo_api_key', newKey);
+        localStorage.setItem('hayyo_org_name', name);
+        
         document.getElementById('org_name').disabled = true;
         document.getElementById('gen-btn').style.display = 'none';
         document.getElementById('key-text').textContent = newKey;
         document.getElementById('key-box').style.display = 'flex';
         document.getElementById('next-btn').style.display = 'block';
-      }
+      }, 500);
     }
 
     function copyKey() {
