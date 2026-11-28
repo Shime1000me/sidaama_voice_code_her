@@ -2,42 +2,113 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>User Playground</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Developer Playground — Transcribe'Her</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
-    body { font-family: sans-serif; background: #0f172a; color: white; padding: 2rem; }
-    .container { max-width: 800px; margin: 0 auto; }
-    .back { color: #60a5fa; text-decoration: none; display: inline-block; margin-bottom: 2rem; }
+    :root {
+      --yellow: #FACC15;
+      --yellow-dark: #EAB308;
+      --black: #0A0A0A;
+      --gray-500: #6B7280;
+      --gray-100: #F3F4F6;
+      --white: #FFFFFF;
+      --red: #dc2626;
+      --green: #059669;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--gray-100); color: var(--black); min-height: 100vh; display: flex; flex-direction: column; }
+    
+    /* Top Nav */
+    .navbar { border-bottom: 1px solid #E5E7EB; padding: 1rem 2rem; background: white; display: flex; justify-content: flex-start; align-items: center; position: sticky; top: 0; z-index: 50; }
+    .logo { font-size: 1.5rem; font-weight: 800; display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: var(--black); }
+    .logo span { color: var(--yellow-dark); }
+    
+    /* Main Layout */
+    .main-content { flex: 1; padding: 3rem 1rem; display: flex; justify-content: center; }
+    .container { max-width: 1000px; width: 100%; }
+    .back { color: var(--gray-500); text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem; font-weight: 600; font-size: 0.9rem; transition: color 0.2s; }
+    .back:hover { color: var(--black); }
+    
+    /* Typography */
+    h1 { font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; }
+    .subtitle { color: var(--gray-500); margin-bottom: 2rem; font-size: 1rem; }
+    
+    /* Grid Layout */
     .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
-    .card { background: #1e293b; padding: 2rem; border-radius: 12px; border: 1px solid #334155; }
-    h2 { color: #60a5fa; margin-bottom: 1rem; }
-    textarea { width: 100%; height: 100px; padding: 1rem; background: #0f172a; border: 1px solid #475569; color: white; border-radius: 8px; margin-bottom: 1rem; resize: none; }
-    .btn { background: #2563eb; color: white; padding: 0.75rem 1rem; border: none; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; }
-    .btn-mic { background: #dc2626; }
-    .status { text-align: center; padding: 0.5rem; border-radius: 8px; margin-bottom: 1rem; display: none; }
-    .status.info { display: block; background: #1e3a8a; }
-    .status.success { display: block; background: #14532d; }
-    .status.error { display: block; background: #7f1d1d; }
-    audio { width: 100%; margin-top: 1rem; }
-    @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+    .card { background: white; padding: 2rem; border-radius: 16px; border: 2px solid var(--black); box-shadow: 4px 4px 0px 0px var(--black); }
+    
+    /* Card Headers */
+    .card-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; border-bottom: 2px solid var(--gray-100); padding-bottom: 1rem; }
+    .card-icon { font-size: 1.5rem; background: var(--gray-100); width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 8px; }
+    .card h2 { font-size: 1.2rem; font-weight: 800; }
+    
+    /* Form Elements */
+    textarea { width: 100%; height: 120px; padding: 1rem; background: var(--gray-100); border: 2px solid #E5E7EB; color: var(--black); border-radius: 8px; margin-bottom: 1rem; resize: none; font-family: inherit; font-size: 1rem; transition: border-color 0.2s; }
+    textarea:focus { outline: none; border-color: var(--yellow-dark); background: white; }
+    textarea[readonly] { background: var(--gray-100); color: var(--gray-500); cursor: not-allowed; }
+    
+    /* Buttons */
+    .btn { background: var(--yellow); color: var(--black); padding: 1rem; border: 2px solid var(--black); border-radius: 8px; cursor: pointer; width: 100%; font-weight: 800; font-size: 1rem; box-shadow: 4px 4px 0px 0px var(--black); transition: all 0.2s; display: flex; justify-content: center; align-items: center; gap: 0.5rem; }
+    .btn:hover { transform: translate(1px, 1px); box-shadow: 3px 3px 0px 0px var(--black); }
+    .btn-mic { background: var(--black); color: white; border-color: var(--black); }
+    .btn-mic:hover { background: var(--gray-500); }
+    
+    /* Status Boxes */
+    .status { text-align: center; padding: 1rem; margin-bottom: 1.5rem; border-radius: 8px; display: none; font-weight: 700; }
+    .status.info { display: block; background: #DBEAFE; color: #1E40AF; border: 2px solid #93C5FD; }
+    .status.success { display: block; background: #D1FAE5; color: var(--green); border: 2px solid var(--green); }
+    .status.error { display: block; background: #FEE2E2; color: var(--red); border: 2px solid var(--red); }
+    
+    audio { width: 100%; margin-top: 1rem; border-radius: 8px; outline: none; }
+    
+    @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
-  <div class="container">
-    <a href="index.html" class="back">← Back to Home</a>
-    <h1>🎙️ User Playground</h1>
-    <div id="status" class="status"></div>
-    <audio id="player" controls hidden></audio>
-    
-    <div class="grid">
-      <div class="card">
-        <h2>🔊 Text to Speech</h2>
-        <textarea id="tts-input">Barsiissi hundaaf barbaachisaadha.</textarea>
-        <button class="btn" id="tts-btn">Generate Voice</button>
-      </div>
-      <div class="card">
-        <h2>🎤 Speech to Text</h2>
-        <button class="btn btn-mic" id="mic-btn">Record Audio</button>
-        <textarea id="asr-output" placeholder="Transcription appears here..." readonly></textarea>
+
+  <!-- Top Nav -->
+  <header class="navbar">
+    <a href="index.html" class="logo">
+      Transcribe<span>'</span>Her
+    </a>
+  </header>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="container">
+      <a href="index.html" class="back">← Back to Home</a>
+      
+      <h1>Developer Playground</h1>
+      <p class="subtitle">Test the raw Text-to-Speech and Speech-to-Text API endpoints for Sidaamu Afoo.</p>
+      
+      <div id="status" class="status"></div>
+      <audio id="player" controls hidden></audio>
+      
+      <div class="grid">
+        <!-- Text to Speech Card -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon">🔊</div>
+            <h2>Text to Speech</h2>
+          </div>
+          <textarea id="tts-input">Barsiissi hundaaf barbaachisaadha.</textarea>
+          <button class="btn" id="tts-btn">
+            <span>✨</span> Generate Voice
+          </button>
+        </div>
+        
+        <!-- Speech to Text Card -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon">🎤</div>
+            <h2>Speech to Text</h2>
+          </div>
+          <button class="btn btn-mic" id="mic-btn">
+            <span>🎙️</span> Record Audio
+          </button>
+          <textarea id="asr-output" placeholder="Your transcription will appear here..." readonly style="margin-top: 1rem;"></textarea>
+        </div>
       </div>
     </div>
   </div>
@@ -50,7 +121,6 @@
     let activeRecorder = null;
 
     function showStatus(msg, type) { statusEl.className = 'status ' + type; statusEl.textContent = msg; }
-
     async function request(step, url, options = {}) { let res = await fetch(url, options); if (!res.ok) throw new Error(`${step} Error`); return res; }
     function parseResult(s) { let ev=''; for(const l of s.split(/\r?\n/)){ if(l.startsWith('event:')) ev=l.slice(6).trim(); else if(l.startsWith('data:')){ if(ev==='complete') return JSON.parse(l.slice(5).trim()); } } throw new Error('Failed'); }
     async function callApi(name, data) { const st = await request('Start', `${API}/call/${name}`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({data}) }); const {event_id} = await st.json(); const rs = await request('Result', `${API}/call/${name}/${event_id}`); return parseResult(await rs.text()); }
@@ -62,10 +132,18 @@
 
     document.getElementById('tts-btn').onclick = async () => {
       const text = document.getElementById('tts-input').value;
-      document.getElementById('tts-btn').textContent = "Generating...";
-      showStatus('⏳ Loading...', 'info');
-      try { player.src = await textToSpeech(text); player.hidden=false; player.play(); statusEl.className='status'; } catch (e) { showStatus('❌ Error', 'error'); }
-      document.getElementById('tts-btn').textContent = "Generate Voice";
+      const btn = document.getElementById('tts-btn');
+      btn.innerHTML = '<span>⏳</span> Generating...';
+      showStatus('⏳ Generating audio...', 'info');
+      try { 
+        player.src = await textToSpeech(text); 
+        player.hidden = false; 
+        player.play(); 
+        statusEl.className='status'; 
+      } catch (e) { 
+        showStatus('❌ Error generating audio', 'error'); 
+      }
+      btn.innerHTML = '<span>✨</span> Generate Voice';
     };
 
     document.getElementById('mic-btn').onclick = async () => {
@@ -76,12 +154,26 @@
         const recorder = new MediaRecorder(stream); const chunks = []; activeRecorder = recorder;
         recorder.ondataavailable = e => chunks.push(e.data);
         recorder.onstop = async () => {
-          btn.style.background = ''; stream.getTracks().forEach(t => t.stop()); showStatus('⏳ Transcribing...', 'info');
+          btn.innerHTML = '<span>🎙️</span> Record Audio';
+          btn.style.background = '';
+          stream.getTracks().forEach(t => t.stop()); 
+          showStatus('⏳ Transcribing...', 'info');
           const file = new File(chunks, `rec.webm`, { type: 'audio/webm' });
-          try { document.getElementById('asr-output').value = await speechToText(file); showStatus('✅ Done', 'success'); setTimeout(()=>statusEl.className='status', 1500); } catch (e) { showStatus('❌ Error', 'error'); }
+          try { 
+            document.getElementById('asr-output').value = await speechToText(file); 
+            showStatus('✅ Transcribed Successfully', 'success'); 
+            setTimeout(()=>statusEl.className='status', 2000); 
+          } catch (e) { 
+            showStatus('❌ Error transcribing audio', 'error'); 
+          }
         };
-        recorder.start(); btn.style.background = '#991b1b'; showStatus('🔴 Recording...', 'info');
-      } catch (e) { showStatus('❌ Mic Denied', 'error'); }
+        recorder.start(); 
+        btn.innerHTML = '<span>🔴</span> Stop Recording';
+        btn.style.background = 'var(--red)'; 
+        showStatus('🔴 Recording... tap again to stop', 'info');
+      } catch (e) { 
+        showStatus('❌ Microphone permission denied', 'error'); 
+      }
     };
   </script>
 </body>
