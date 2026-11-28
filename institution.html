@@ -45,12 +45,12 @@
   </div>
 
   <script>
-    // --- SUPABASE SETUP ---
+    // --- SUPABASE SETUP (UPDATED SECRET KEY) ---
     const SUPABASE_URL = "https://dhcojcnwjcyrcymgqhme.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_ve3P0-iuAiLl78Ra_AWjEw__b7wSNG8";
+    const SUPABASE_KEY = "sb_secret_oiy7bGZM9K5giduxLxLj8Q_uwxphX8-"; 
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // --- HAYYO VOICE API SETUP (The code that worked!) ---
+    // --- HAYYO VOICE API SETUP ---
     const BASE = "https://hayyoai1000me-sidaama-voice-code-her.hf.space";
     const API = BASE + "/gradio_api";
     const player = document.getElementById('player');
@@ -81,11 +81,9 @@
         document.getElementById('q2-label').textContent = data.q2;
         document.getElementById('form-content').style.display = 'block';
         
-        // Wire up Play Buttons
-        document.getElementById('play1').onclick = async () => { showStatus('⏳ Loading Audio...','info'); player.src = await textToSpeech(data.q1); player.hidden=false; player.play(); hideStatus(); };
-        document.getElementById('play2').onclick = async () => { showStatus('⏳ Loading Audio...','info'); player.src = await textToSpeech(data.q2); player.hidden=false; player.play(); hideStatus(); };
+        document.getElementById('play1').onclick = async () => { showStatus('⏳ Loading Audio...','info'); player.src = await textToSpeech(data.q1); player.hidden=false; player.play(); statusEl.className='status'; };
+        document.getElementById('play2').onclick = async () => { showStatus('⏳ Loading Audio...','info'); player.src = await textToSpeech(data.q2); player.hidden=false; player.play(); statusEl.className='status'; };
 
-        // Wire up Mic Buttons
         document.getElementById('mic1').onclick = () => handleMic(document.getElementById('mic1'), document.getElementById('ans1'));
         document.getElementById('mic2').onclick = () => handleMic(document.getElementById('mic2'), document.getElementById('ans2'));
       }
