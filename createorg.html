@@ -36,7 +36,7 @@
       <button class="btn" onclick="saveForm()">Generate Live Form</button>
       <div class="success" id="success-msg">
         ✅ Form Created! <br><br>
-        <a href="institution.html">Open Institution View →</a>
+        <a href="institution.html">Open Institution Directory →</a>
       </div>
     </div>
   </div>
@@ -50,11 +50,14 @@
 
       if(!key || !name) return alert("Please enter API Key and Name");
 
-      // Save form data to browser memory instantly
-      localStorage.setItem('hayyo_api_key', key);
-      localStorage.setItem('hayyo_org_name', name);
-      localStorage.setItem('hayyo_q1', q1);
-      localStorage.setItem('hayyo_q2', q2);
+      // Get existing list of organizations (or empty array if none)
+      let orgs = JSON.parse(localStorage.getItem('hayyo_all_orgs')) || [];
+      
+      // Add the new organization to the list
+      orgs.push({ name: name, q1: q1, q2: q2 });
+      
+      // Save the updated list back to memory
+      localStorage.setItem('hayyo_all_orgs', JSON.stringify(orgs));
 
       document.getElementById('success-msg').style.display = 'block';
     }
