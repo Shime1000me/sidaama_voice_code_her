@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Form Builder</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { font-family: sans-serif; background: #0f172a; color: white; padding: 3rem; }
+    .container { max-width: 600px; margin: 0 auto; }
+    .back { color: #60a5fa; text-decoration: none; display: inline-block; margin-bottom: 2rem; }
+    .card { background: #1e293b; padding: 2rem; border-radius: 12px; border: 1px solid #334155; }
+    h2 { color: #60a5fa; margin-bottom: 1rem; }
+    label { display: block; margin-top: 1rem; color: #94a3b8; font-size: 0.9rem; }
+    input { width: 100%; padding: 0.75rem; margin-top: 0.5rem; background: #0f172a; border: 1px solid #475569; color: white; border-radius: 8px; }
+    .btn { background: #059669; color: white; padding: 1rem 2rem; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 1.5rem; }
+    .success { display: none; margin-top: 1rem; background: #14532d; color: #86efac; padding: 1rem; border-radius: 8px; text-align: center; }
+    .success a { color: #60a5fa; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="index.html" class="back">← Back to Home</a>
+    <div class="card">
+      <h2>2. Build Your Form</h2>
+      <label>API Key</label>
+      <input type="text" id="api_key" placeholder="Paste your sk_live_... key">
+      
+      <label>Organization Name</label>
+      <input type="text" id="org_name" placeholder="e.g., Hawassa Microfinance">
+      
+      <label>Question 1 (Sidaamu Afoo)</label>
+      <input type="text" id="q1" value="Su'makki borreessi?">
+      
+      <label>Question 2 (Sidaamu Afoo)</label>
+      <input type="text" id="q2" value="Aganunni mageeshshi eo afidhinanni?">
+      
+      <button class="btn" onclick="saveForm()">Generate Live Form</button>
+      <div class="success" id="success-msg">
+        ✅ Form Created! <br><br>
+        <a href="institution.html">Open Institution View →</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = "https://dhcojcnwjcyrcymgqhme.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_ve3P0-iuAiLl78Ra_AWjEw__b7wSNG8";
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    async function saveForm() {
+      const key = document.getElementById('api_key').value;
+      const name = document.getElementById('org_name').value;
+      const q1 = document.getElementById('q1').value;
+      const q2 = document.getElementById('q2').value;
+
+      if(!key || !name) return alert("Please enter API Key and Name");
+
+      const { data, error } = await supabaseClient
+        .from('organizations')
+        .update({ org_name: name, q1: q1, q2: q2 })
+        .eq('api_key', key)
+        .select();
+
+      if (error || data.length === 0) {
+        alert("Invalid API Key or Database Error.");
+      } else {
+        document.getElementById('success-msg').style.display = 'block';
+      }
+    }
+  </script>
+</body>
+</html>
